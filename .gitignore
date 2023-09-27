@@ -1,0 +1,8 @@
+build
+.vscode
+slurm*
+nohup.out
+.idea
+cmake*
+*.log
+data
