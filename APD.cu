@@ -1903,9 +1903,6 @@ __global__ void GenAnchors(
 	const float ransac_threshold = params->ransac_threshold;
     const uchar center_sa_id = sa_mask[center];
     bool use_sa_mask = false;
-    if (center_sa_id != 0) {
-        use_sa_mask = true;
-    }
 
 	for (int origin_direction_x = -1; origin_direction_x <= 1; ++origin_direction_x) {
 		for (int origin_direction_y = -1; origin_direction_y <= 1; ++origin_direction_y) {
@@ -1938,14 +1935,6 @@ __global__ void GenAnchors(
                             continue;
                         }
                         anchor_pt_center = anchor_pt.x + anchor_pt.y * width;
-
-                        if (use_sa_mask) {
-                            const uchar anchor_sa_id = sa_mask[anchor_pt_center];
-                            if (anchor_sa_id != center_sa_id) {
-                                stop_expand = true;
-                                break;
-                            }
-                        }
 
 						float2 test_direction = make_float2(anchor_pt.x - point.x, anchor_pt.y - point.y);
 						NormalizeVec2(&test_direction);
