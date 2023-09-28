@@ -6,7 +6,7 @@ cmake --build ./build --target APD -j 4
 # ETH3D all depth
 ##############################
 python run.py \
-  --APD_path $HOME/work/APD-explore/build/APD \
+  --APD_path ./build/APD \
   --data_dir $HOME/data/ETH3D/data \
   --memory_cache \
   --no_fuse \
@@ -16,7 +16,7 @@ python run.py \
 # ETH3D all fuse
 ##############################
 python run.py \
-    --APD_path $HOME/work/APD-explore/build/APD \
+    --APD_path ./build/APD \
     --data_dir $HOME/data/ETH3D/data \
     --only_fuse \
     --work_num 13 \
@@ -25,7 +25,7 @@ python run.py \
 # ETH3D train depth
 ##############################
 # python run.py \
-#   --APD_path $HOME/work/APD-explore/build/APD \
+#   --APD_path ./build/APD \
 #   --data_dir $HOME/data/ETH3D/data \
 #   --memory_cache \
 #   --no_fuse \
@@ -36,7 +36,7 @@ python run.py \
 # ETH3D train fuse
 ##############################
 # python run.py \
-#   --APD_path $HOME/work/APD-explore/build/APD \
+#   --APD_path ./build/APD \
 #   --data_dir $HOME/data/ETH3D/data \
 #   --only_fuse \
 #   --work_num 6 \
@@ -45,7 +45,7 @@ python run.py \
 # ETH3D test depth
 ##############################
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/ETH3D/data \
 #     --memory_cache \
 #     --no_fuse \
@@ -56,7 +56,7 @@ python run.py \
 # ETH3D test fuse
 ##############################
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/ETH3D/data \
 #     --only_fuse \
 #     --work_num 6 \
@@ -66,7 +66,7 @@ python run.py \
 # scan run
 ##############################
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/ETH3D/data \
 #     --memory_cache \
 #     --gpu_num 2 \
@@ -75,7 +75,7 @@ python run.py \
 #     --scans office pipes \
 #     --export_anchor
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/ETH3D/data \
 #     --work_num 2 \
 #     --only_fuse \

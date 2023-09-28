@@ -7,7 +7,7 @@ import glob
 # args:
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default='/home/ubuntu/Data/DTU/test')
-parser.add_argument('--APD_path', type=str, default='/home/ubuntu/Work/APD-explore/cmake-build-release/APD')
+parser.add_argument('--APD_path', type=str, default='./build/APD')
 parser.add_argument('--resume', action='store_true', default=False)
 parser.add_argument('--gpu_num', type=int, default=1)
 parser.add_argument('--work_num', type=int, default=1)

@@ -6,14 +6,14 @@ cmake --build ./build --target APD -j 4
 # scan run
 ##############################
 python run.py \
-   --APD_path $HOME/work/APD-explore/build/APD \
+   --APD_path ./build/APD \
    --data_dir $HOME/data/temp \
    --memory_cache \
    --backup_code \
    --no_fuse \
    --scans output
 python run.py \
-  --APD_path $HOME/work/APD-explore/build/APD \
+  --APD_path ./build/APD \
   --data_dir $HOME/data/temp \
   --only_fuse \
   --work_num 1 \

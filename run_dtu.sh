@@ -6,7 +6,7 @@ cmake --build ./build --target APD -j 4
 # DTU test depth
 ##############################
 python run.py \
-   --APD_path $HOME/work/APD-explore/build/APD \
+   --APD_path ./build/APD \
    --data_dir $HOME/data/DTU/test \
    --memory_cache \
    --no_fuse \
@@ -17,7 +17,7 @@ python run.py \
 # DTU test fuse
 ##############################
 python run.py \
-   --APD_path $HOME/work/APD-explore/build/APD \
+   --APD_path ./build/APD \
    --data_dir $HOME/data/DTU/test \
    --only_fuse \
    --work_num 22
@@ -25,14 +25,14 @@ python run.py \
 # scan run
 ##############################
 # python run.py \
-#    --APD_path $HOME/work/APD-explore/build/APD \
+#    --APD_path ./build/APD  \
 #    --data_dir $HOME/data/DTU/test \
 #    --memory_cache \
 #    --no_fuse \
 #    --backup_code \
 #    --scans scan77 
 # python run.py \
-#    --APD_path $HOME/work/APD-explore/build/APD \
+#    --APD_path .//build/APD \
 #    --data_dir $HOME/data/DTU/test \
 #    --only_fuse \
 #    --scans scan77 

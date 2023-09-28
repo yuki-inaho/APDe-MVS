@@ -1876,7 +1876,6 @@ __global__ void GenAnchors(
 	const Camera& camera = helper->cameras_cuda[0];
 	const unsigned offset = anchors_map[center] * ANCHOR_NUM;
 	const float4* plane_hypotheses = helper->plane_hypotheses_cuda;
-    const uchar *sa_mask = helper->sa_mask_cuda;
 	curandState* rand_state = &(helper->rand_states_cuda[center]);
 	short2* anchors = &(helper->anchors_cuda[offset]);
 	uchar* weak_reliable = &(helper->weak_reliable_cuda[center]);
@@ -1901,8 +1900,6 @@ __global__ void GenAnchors(
 	const float threshhold = cos((angle / 2.0f) * M_PI / 180.0f);
 	const int shift_range = MAX((int)(tan((angle / 2.0f) * M_PI / 180.0f) * 20), 1);
 	const float ransac_threshold = params->ransac_threshold;
-    const uchar center_sa_id = sa_mask[center];
-    bool use_sa_mask = false;
 
 	for (int origin_direction_x = -1; origin_direction_x <= 1; ++origin_direction_x) {
 		for (int origin_direction_y = -1; origin_direction_y <= 1; ++origin_direction_y) {

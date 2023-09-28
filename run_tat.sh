@@ -6,7 +6,7 @@ cmake --build ./build --target APD -j 4
 # TaT all depth
 ##############################
 python run.py \
-  --APD_path $HOME/work/APD-explore/build/APD \
+  --APD_path ./build/APD \
   --data_dir $HOME/data/TaT/data \
   --memory_cache \
   --no_fuse \
@@ -16,7 +16,7 @@ python run.py \
 # TaT all fuse
 ##############################
 python run.py \
-  --APD_path $HOME/work/APD-explore/build/APD \
+  --APD_path ./build/APD \
   --data_dir $HOME/data/TaT/data \
   --only_fuse \
   --work_num 4 \
@@ -25,7 +25,7 @@ python run.py \
 # TaT intermediate depth
 ##############################
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/TaT/data \
 #     --memory_cache \
 #     --no_fuse \
@@ -36,7 +36,7 @@ python run.py \
 # TaT intermediate fuse
 ##############################
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/TaT/data \
 #     --only_fuse \
 #     --work_num 4 \
@@ -45,7 +45,7 @@ python run.py \
 # TaT advanced depth
 ##############################
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/TaT/data \
 #     --memory_cache \
 #     --no_fuse \
@@ -56,7 +56,7 @@ python run.py \
 # TaT advanced fuse
 ##############################
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/TaT/data \
 #     --only_fuse \
 #     --work_num 4 \
@@ -65,7 +65,7 @@ python run.py \
 # scan run
 ##############################
 # python run.py \
-#     --APD_path $HOME/work/APD-explore/build/APD \
+#     --APD_path ./build/APD \
 #     --data_dir $HOME/data/TaT/data \
 #     --memory_cache \
 #     --gpu_num 1 \
@@ -73,7 +73,7 @@ python run.py \
 #     --nofuse \
 #     --scans Horse
 # python run.py \
-#    --APD_path $HOME/work/APD-explore/build/APD \
+#    --APD_path ./build/APD \
 #    --data_dir $HOME/data/TaT/data \
 #    --work_num 1 \
 #    --only_fuse \
