@@ -1295,14 +1295,14 @@ __device__ void CheckerboardPropagationStrong(
 		costMinPoint = right_near;
 		for (int i = 0; i < 3; ++i) {
 			if (p.x < width - 2 - i && p.y > i) {
-				int pointTemp = right_near + (1 + i) - i * width;
+				int pointTemp = right_near + (1 + i) - (i + 1) * width;
 				if (costs[pointTemp] < costMin) {
 					costMin = costs[pointTemp];
 					costMinPoint = pointTemp;
 				}
 			}
 			if (p.x < width - 2 - i && p.y < height - 1 - i) {
-				int pointTemp = right_near + (1 + i) + i * width;
+				int pointTemp = right_near + (1 + i) + (i + 1) * width;
 				if (costs[pointTemp] < costMin) {
 					costMin = costs[pointTemp];
 					costMinPoint = pointTemp;
