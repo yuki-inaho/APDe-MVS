@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 3.26.2)
 project(APD)
 
 set(Boost_USE_STATIC_LIBS ON)
