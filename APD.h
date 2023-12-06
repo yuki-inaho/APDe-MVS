@@ -33,9 +33,6 @@ bool ExportPointCloud(const path &point_cloud_path, std::vector<PointList> &poin
 
 std::string ToFormatIndex(int index);
 
-template<typename TYPE>
-void RescaleMatToTargetSize(const cv::Mat &src, cv::Mat &dst, const cv::Size2i &target_size);
-
 void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name = "APD.ply");
 
 void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &problems,
@@ -43,13 +40,6 @@ void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &probl
 
 void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &problems,
                      const std::string &name = "APD.ply");
-
-void DepthCompareToWeak(const path &dense_folder, const std::vector<Problem> &problems);
-
-void CounterMap(const path &dense_folder, const std::vector<Problem> &problems);
-
-void ShowCounterMap(const path &counter_path, const cv::Mat &counter_map);
-
 
 struct cudaTextureObjects {
     cudaTextureObject_t images[MAX_IMAGES];

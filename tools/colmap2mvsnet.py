@@ -16,7 +16,7 @@ import argparse
 import shutil
 import cv2
 
-#============================ read_model.py ============================#
+# ============================ read_model.py ============================#
 CameraModel = collections.namedtuple(
     "CameraModel", ["model_id", "model_name", "num_params"])
 Camera = collections.namedtuple(
@@ -26,9 +26,11 @@ BaseImage = collections.namedtuple(
 Point3D = collections.namedtuple(
     "Point3D", ["id", "xyz", "rgb", "error", "image_ids", "point2D_idxs"])
 
+
 class Image(BaseImage):
     def qvec2rotmat(self):
         return qvec2rotmat(self.qvec)
+
 
 CAMERA_MODELS = {
     CameraModel(model_id=0, model_name="SIMPLE_PINHOLE", num_params=3),
@@ -85,6 +87,20 @@ def read_cameras_text(path):
     return cameras
 
 
+def write_cameras_text(path, cameras):
+    """
+    see: src/base/reconstruction.cc
+        void Reconstruction::WriteCamerasText(const std::string& path)
+        void Reconstruction::ReadCamerasText(const std::string& path)
+    """
+    with open(path, "w") as fid:
+        for camera_id, camera in cameras.items():
+            fid.write("%d %s %d %d" % (
+                camera_id, camera.model, camera.width, camera.height))
+            for param in camera.params:
+                fid.write(" %f" % param)
+            fid.write("\n")
+
 def read_cameras_binary(path_to_model_file):
     """
     see: src/base/reconstruction.cc
@@ -103,8 +119,8 @@ def read_cameras_binary(path_to_model_file):
             width = camera_properties[2]
             height = camera_properties[3]
             num_params = CAMERA_MODEL_IDS[model_id].num_params
-            params = read_next_bytes(fid, num_bytes=8*num_params,
-                                     format_char_sequence="d"*num_params)
+            params = read_next_bytes(fid, num_bytes=8 * num_params,
+                                     format_char_sequence="d" * num_params)
             cameras[camera_id] = Camera(id=camera_id,
                                         model=model_name,
                                         width=width,
@@ -145,6 +161,25 @@ def read_images_text(path):
     return images
 
 
+def write_images_text(path, images):
+    """
+    see: src/base/reconstruction.cc
+        void Reconstruction::ReadImagesText(const std::string& path)
+        void Reconstruction::WriteImagesText(const std::string& path)
+    """
+    with open(path, "w") as fid:
+        for image_id, image in images.items():
+            fid.write("%d %f %f %f %f %f %f %f %d %s\n" % (
+                image_id,
+                image.qvec[0], image.qvec[1], image.qvec[2], image.qvec[3],
+                image.tvec[0], image.tvec[1], image.tvec[2],
+                image.camera_id, image.name))
+            fid.write("%f %f %d" % (image.xys[0, 0], image.xys[0, 1], image.point3D_ids[0]))
+            for i in range(1, image.xys.shape[0]):
+                fid.write(" %f %f %d" % (image.xys[i, 0], image.xys[i, 1], image.point3D_ids[i]))
+            fid.write("\n")
+
+
 def read_images_binary(path_to_model_file):
     """
     see: src/base/reconstruction.cc
@@ -163,13 +198,13 @@ def read_images_binary(path_to_model_file):
             camera_id = binary_image_properties[8]
             image_name = ""
             current_char = read_next_bytes(fid, 1, "c")[0]
-            while current_char != b"\x00":   # look for the ASCII 0 entry
+            while current_char != b"\x00":  # look for the ASCII 0 entry
                 image_name += current_char.decode("utf-8")
                 current_char = read_next_bytes(fid, 1, "c")[0]
             num_points2D = read_next_bytes(fid, num_bytes=8,
                                            format_char_sequence="Q")[0]
-            x_y_id_s = read_next_bytes(fid, num_bytes=24*num_points2D,
-                                       format_char_sequence="ddq"*num_points2D)
+            x_y_id_s = read_next_bytes(fid, num_bytes=24 * num_points2D,
+                                       format_char_sequence="ddq" * num_points2D)
             xys = np.column_stack([tuple(map(float, x_y_id_s[0::3])),
                                    tuple(map(float, x_y_id_s[1::3]))])
             point3D_ids = np.array(tuple(map(int, x_y_id_s[2::3])))
@@ -226,8 +261,8 @@ def read_points3d_binary(path_to_model_file):
             track_length = read_next_bytes(
                 fid, num_bytes=8, format_char_sequence="Q")[0]
             track_elems = read_next_bytes(
-                fid, num_bytes=8*track_length,
-                format_char_sequence="ii"*track_length)
+                fid, num_bytes=8 * track_length,
+                format_char_sequence="ii" * track_length)
             image_ids = np.array(tuple(map(int, track_elems[0::2])))
             point2D_idxs = np.array(tuple(map(int, track_elems[1::2])))
             points3D[point3D_id] = Point3D(
@@ -251,15 +286,15 @@ def read_model(path, ext):
 
 def qvec2rotmat(qvec):
     return np.array([
-        [1 - 2 * qvec[2]**2 - 2 * qvec[3]**2,
+        [1 - 2 * qvec[2] ** 2 - 2 * qvec[3] ** 2,
          2 * qvec[1] * qvec[2] - 2 * qvec[0] * qvec[3],
          2 * qvec[3] * qvec[1] + 2 * qvec[0] * qvec[2]],
         [2 * qvec[1] * qvec[2] + 2 * qvec[0] * qvec[3],
-         1 - 2 * qvec[1]**2 - 2 * qvec[3]**2,
+         1 - 2 * qvec[1] ** 2 - 2 * qvec[3] ** 2,
          2 * qvec[2] * qvec[3] - 2 * qvec[0] * qvec[1]],
         [2 * qvec[3] * qvec[1] - 2 * qvec[0] * qvec[2],
          2 * qvec[2] * qvec[3] + 2 * qvec[0] * qvec[1],
-         1 - 2 * qvec[1]**2 - 2 * qvec[2]**2]])
+         1 - 2 * qvec[1] ** 2 - 2 * qvec[2] ** 2]])
 
 
 def rotmat2qvec(R):
@@ -276,21 +311,22 @@ def rotmat2qvec(R):
     return qvec
 
 
-
 def calc_score(inputs, images, points3d, extrinsic, args):
     i, j = inputs
-    id_i = images[i+1].point3D_ids
-    id_j = images[j+1].point3D_ids
+    id_i = images[i + 1].point3D_ids
+    id_j = images[j + 1].point3D_ids
     id_intersect = [it for it in id_i if it in id_j]
-    cam_center_i = -np.matmul(extrinsic[i+1][:3, :3].transpose(), extrinsic[i+1][:3, 3:4])[:, 0]
-    cam_center_j = -np.matmul(extrinsic[j+1][:3, :3].transpose(), extrinsic[j+1][:3, 3:4])[:, 0]
+    cam_center_i = -np.matmul(extrinsic[i + 1][:3, :3].transpose(), extrinsic[i + 1][:3, 3:4])[:, 0]
+    cam_center_j = -np.matmul(extrinsic[j + 1][:3, :3].transpose(), extrinsic[j + 1][:3, 3:4])[:, 0]
     score = 0
     angles = []
     for pid in id_intersect:
         if pid == -1:
             continue
         p = points3d[pid].xyz
-        theta = (180 / np.pi) * np.arccos(np.dot(cam_center_i - p, cam_center_j - p) / np.linalg.norm(cam_center_i - p) / np.linalg.norm(cam_center_j - p)) # triangulation angle
+        theta = (180 / np.pi) * np.arccos(
+            np.dot(cam_center_i - p, cam_center_j - p) / np.linalg.norm(cam_center_i - p) / np.linalg.norm(
+                cam_center_j - p))  # triangulation angle
         # score += np.exp(-(theta - args.theta0) * (theta - args.theta0) / (2 * (args.sigma1 if theta <= args.theta0 else args.sigma2) ** 2))
         angles.append(theta)
         score += 1
@@ -301,12 +337,17 @@ def calc_score(inputs, images, points3d, extrinsic, args):
             score = 0.0
     return i, j, score
 
-def processing_single_scene(args):
 
+def processing_single_scene(args):
     image_dir = os.path.join(args.dense_folder, 'images')
-    model_dir = os.path.join(args.dense_folder, 'dslr_calibration_undistorted')
+    model_dir = os.path.join(args.dense_folder, 'sparse')
     cam_dir = os.path.join(args.save_folder, 'cams')
     image_converted_dir = os.path.join(args.save_folder, 'images')
+    sparse_dir = os.path.join(args.save_folder, 'sparse', '0')
+    if os.path.exists(sparse_dir):
+        print("remove:{}".format(sparse_dir))
+        shutil.rmtree(sparse_dir)
+    os.makedirs(sparse_dir)
 
     if os.path.exists(image_converted_dir):
         print("remove:{}".format(image_converted_dir))
@@ -332,12 +373,14 @@ def processing_single_scene(args):
         'FOV': ['fx', 'fy', 'cx', 'cy', 'omega'],
         'THIN_PRISM_FISHEYE': ['fx', 'fy', 'cx', 'cy', 'k1', 'k2', 'p1', 'p2', 'k3', 'k4', 'sx1', 'sy1']
     }
-    
+
     scale_factor = args.scale_factor
 
     # intrinsic
     intrinsic = {}
     for camera_id, cam in cameras.items():
+        if cam.model not in ['SIMPLE_PINHOLE', 'PINHOLE']:
+            raise ValueError('Unsupported camera model: %s' % cam.model)
         params_dict = {key: value for key, value in zip(param_type[cam.model], cam.params)}
         if 'f' in param_type[cam.model]:
             params_dict['fx'] = params_dict['f']
@@ -348,11 +391,12 @@ def processing_single_scene(args):
             [0, 0, 1]
         ])
         intrinsic[camera_id] = i
+        cameras[camera_id] = cameras[camera_id]._replace(params=cam.params / scale_factor)
     print('intrinsic\n', intrinsic, end='\n\n')
 
     new_images = {}
     for i, image_id in enumerate(sorted(images.keys())):
-        new_images[i+1] = images[image_id]
+        new_images[i + 1] = images[image_id]
     images = new_images
 
     # extrinsic
@@ -369,10 +413,11 @@ def processing_single_scene(args):
     depth_ranges = {}
     for i in range(num_images):
         zs = []
-        for p3d_id in images[i+1].point3D_ids:
+        for p3d_id in images[i + 1].point3D_ids:
             if p3d_id == -1:
                 continue
-            transformed = np.matmul(extrinsic[i+1], [points3d[p3d_id].xyz[0], points3d[p3d_id].xyz[1], points3d[p3d_id].xyz[2], 1])
+            transformed = np.matmul(extrinsic[i + 1],
+                                    [points3d[p3d_id].xyz[0], points3d[p3d_id].xyz[1], points3d[p3d_id].xyz[2], 1])
             # zs.append(np.asscalar(transformed[2]))
             zs.append(transformed[2].item())
         depth_min = 0
@@ -381,12 +426,12 @@ def processing_single_scene(args):
             zs_sorted = sorted(zs)
             # relaxed depth range
             depth_min = zs_sorted[int(len(zs) * .01)] * 0.75
-            depth_max = zs_sorted[int(len(zs) * .99)] * 1.25    
+            depth_max = zs_sorted[int(len(zs) * .99)] * 1.25
 
-        # determine depth number by inverse depth setting, see supplementary material
+            # determine depth number by inverse depth setting, see supplementary material
         if args.max_d == 0:
-            image_int = intrinsic[images[i+1].camera_id]
-            image_ext = extrinsic[i+1]
+            image_int = intrinsic[images[i + 1].camera_id]
+            image_ext = extrinsic[i + 1]
             image_r = image_ext[0:3, 0:3]
             image_t = image_ext[0:3, 3]
             p1 = [image_int[0, 2], image_int[1, 2], 1]
@@ -399,7 +444,7 @@ def processing_single_scene(args):
         else:
             depth_num = args.max_d
         depth_interval = (depth_max - depth_min) / (depth_num - 1) / args.interval_scale
-        depth_ranges[i+1] = (depth_min, depth_interval, depth_num, depth_max)
+        depth_ranges[i + 1] = (depth_min, depth_interval, depth_num, depth_max)
     print('depth_ranges[1]\n', depth_ranges[1], end='\n\n')
 
     # view selection
@@ -432,14 +477,15 @@ def processing_single_scene(args):
             f.write('extrinsic\n')
             for j in range(4):
                 for k in range(4):
-                    f.write(str(extrinsic[i+1][j, k]) + ' ')
+                    f.write(str(extrinsic[i + 1][j, k]) + ' ')
                 f.write('\n')
             f.write('\nintrinsic\n')
             for j in range(3):
                 for k in range(3):
-                    f.write(str(intrinsic[images[i+1].camera_id][j, k]) + ' ')
+                    f.write(str(intrinsic[images[i + 1].camera_id][j, k]) + ' ')
                 f.write('\n')
-            f.write('\n%f %f %f %f\n' % (depth_ranges[i+1][0], depth_ranges[i+1][1], depth_ranges[i+1][2], depth_ranges[i+1][3]))
+            f.write('\n%f %f %f %f\n' % (
+            depth_ranges[i + 1][0], depth_ranges[i + 1][1], depth_ranges[i + 1][2], depth_ranges[i + 1][3]))
     with open(os.path.join(args.save_folder, 'pair.txt'), 'w') as f:
         f.write('%d\n' % len(images))
         for i, sorted_score in enumerate(view_sel):
@@ -458,20 +504,28 @@ def processing_single_scene(args):
         if max_width < img.shape[1]:
             max_width = img.shape[1]
 
-
-    #convert to jpg
+    # convert to jpg
     for i in range(num_images):
         img_path = os.path.join(image_dir, images[i + 1].name)
         img = cv2.imread(img_path)
         pad_width = max_width - img.shape[1]
         pad_height = max_height - img.shape[0]
         img_pad = np.pad(img, ((0, pad_height), (0, pad_width), (0, 0)), 'constant')
-        img_pad = cv2.resize(img_pad, (int(img_pad.shape[1] / scale_factor), int(img_pad.shape[0] / scale_factor)), interpolation=cv2.INTER_NEAREST)
+        img_pad = cv2.resize(img_pad, (int(img_pad.shape[1] / scale_factor), int(img_pad.shape[0] / scale_factor)),
+                             interpolation=cv2.INTER_NEAREST)
         cv2.imwrite(os.path.join(image_converted_dir, '%08d.jpg' % i), img_pad)
+        images[i + 1] = images[i + 1]._replace(name='%08d.jpg' % i)
+        camera_id = images[i + 1].camera_id
+        cameras[camera_id] = cameras[camera_id]._replace(width=int(img_pad.shape[1]), height=int(img_pad.shape[0]))
         # if not img_path.endswith(".jpg"):
         #
         # else:
         #     shutil.copyfile(os.path.join(image_dir, images[i+1].name), os.path.join(image_converted_dir, '%08d.jpg' % i))
+    # cp cameras.txt images.txt points3D.txt to sparse/0
+    write_cameras_text(os.path.join(sparse_dir, 'cameras.txt'), cameras)
+    shutil.copyfile(os.path.join(model_dir, 'points3D' + args.model_ext),
+                    os.path.join(sparse_dir, 'points3D' + args.model_ext))
+    write_images_text(os.path.join(sparse_dir, 'images.txt'), images)
 
 
 if __name__ == '__main__':
@@ -483,11 +537,11 @@ if __name__ == '__main__':
     parser.add_argument('--max_d', type=int, default=192)
     parser.add_argument('--interval_scale', type=float, default=1)
     parser.add_argument('--scale_factor', type=float, default=1)
-    
+
     parser.add_argument('--theta0', type=float, default=5)
     parser.add_argument('--sigma1', type=float, default=1)
     parser.add_argument('--sigma2', type=float, default=10)
-    parser.add_argument('--model_ext', type=str, default=".txt",  choices=[".txt", ".bin"], help='sparse model ext')
+    parser.add_argument('--model_ext', type=str, default=".txt", choices=[".txt", ".bin"], help='sparse model ext')
 
     args = parser.parse_args()
 

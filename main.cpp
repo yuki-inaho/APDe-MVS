@@ -188,17 +188,13 @@ void ProcessProblem(const Problem &problem) {
         ShowNormalMap(normal_img_path, normal);
         ShowWeakImage(weak_img_path, pixel_states);
         if (problem.params.geom_consistency || problem.params.use_APD) {
-            path confidence_img_path = problem.result_folder / path("confidence_" + std::to_string(problem.iteration) +
-                                                                    ".png");
+            path confidence_img_path = problem.result_folder / path("confidence_" + std::to_string(problem.iteration) + ".png");
             ShowConfidenceMap(confidence_img_path, confidence);
         }
-
     }
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Processing image: " << std::setw(8) << std::setfill('0') << problem.ref_image_id << " done!"
-              << std::endl;
-    std::cout << "Cost time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms"
-              << std::endl;
+    std::cout << "Processing image: " << std::setw(8) << std::setfill('0') << problem.ref_image_id << " done!" << std::endl;
+    std::cout << "Cost time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
 }
 
 int main(int argc, char **argv) {

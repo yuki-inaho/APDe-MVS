@@ -6,3 +6,5 @@ nohup.out
 cmake*
 *.log
 data
+run_*
+tools/checkpoints

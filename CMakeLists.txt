@@ -1,15 +1,15 @@
-cmake_minimum_required(VERSION 3.26.2)
+cmake_minimum_required(VERSION 3.22.0)
 project(APD)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
+set(Boost_USE_STATIC_RUNTIME ON)
 
-# recommand >=3.3.0
+# recommand >=4.6.0
 find_package(OpenCV REQUIRED)
-# recommand >=1.62.0
+# recommand >=1.78.0
 find_package(Boost REQUIRED COMPONENTS filesystem system program_options)
-# recommand >=10.2.
+# recommand >=11.8
 find_package(CUDA REQUIRED)
 
 include_directories(
@@ -18,11 +18,7 @@ include_directories(
 include_directories(.)
 
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3 --use_fast_math --maxrregcount=128 --ptxas-options=-v -std=c++11
-        --compiler-options -Wall
-        -gencode arch=compute_61,code=sm_61
-        -gencode arch=compute_80,code=sm_80
-        -gencode arch=compute_70,code=sm_70
-        )
+        --compiler-options -Wall)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-std=c++11)
@@ -43,6 +39,8 @@ cuda_add_executable(
         APD.cu
         main.cpp
 )
+
+set_target_properties(APD PROPERTIES CUDA_ARCHITECTURES "70;75;80;89")
 
 target_link_libraries(APD
         "${Boost_LIBRARIES}"

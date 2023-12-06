@@ -604,7 +604,7 @@ void APD::InuputInitialization() {
         }
         for (auto &depth: depths) {
             if (depth.cols != width || depth.rows != height) {
-                RescaleMatToTargetSize<float>(depth, depth, cv::Size(width, height));
+                cv::resize(depth, depth, cv::Size(width, height), 0, 0, cv::INTER_NEAREST);
             }
         }
     }
@@ -617,14 +617,12 @@ void APD::InuputInitialization() {
         ReadBinMat(weak_info_path, weak_info_host);
         ReadBinMat(confidence_path, confidence_host);
         if (weak_info_host.cols != width || weak_info_host.rows != height) {
-            std::cout << "Weak info doesn't match the images' size!\n";
-            RescaleMatToTargetSize<uchar>(weak_info_host, weak_info_host, cv::Size(width, height));
-            std::cout << "Scale done\n";
+            std::cout << "resize weak info to target size\n";
+            cv::resize(weak_info_host, weak_info_host, cv::Size(width, height), 0, 0, cv::INTER_NEAREST);
         }
         if (confidence_host.cols != width || confidence_host.rows != height) {
-            std::cout << "Confidence doesn't match the images' size!\n";
-            RescaleMatToTargetSize<uchar>(confidence_host, confidence_host, cv::Size(width, height));
-            std::cout << "Scale done\n";
+            std::cout << "resize confidence to target size\n";
+            cv::resize(confidence_host, confidence_host, cv::Size(width, height), 0, 0, cv::INTER_NEAREST);
         }
         anchors_map_host = cv::Mat::zeros(weak_info_host.size(), CV_32SC1);
         weak_count = 0;
@@ -644,9 +642,8 @@ void APD::InuputInitialization() {
             path sa_mask_path = sa_mask_folder / path(ToFormatIndex(problem.ref_image_id) + ".bin");
             ReadBinMat(sa_mask_path, sa_mask_host);
             if (sa_mask_host.cols != width || sa_mask_host.rows != height) {
-                std::cout << "SA mask doesn't match the images' size!\n";
-                RescaleMatToTargetSize<uchar>(sa_mask_host, sa_mask_host, cv::Size(width, height));
-                std::cout << "Scale done\n";
+                std::cout << "resize sa mask to target size\n";
+                cv::resize(sa_mask_host, sa_mask_host, cv::Size(width, height), 0, 0, cv::INTER_NEAREST);
             }
         }
         std::cout << "Weak count: " << weak_count << " / " << weak_info_host.cols * weak_info_host.rows << " = "
@@ -666,9 +663,9 @@ void APD::InuputInitialization() {
         ReadBinMat(depth_path, depth);
         ReadBinMat(normal_path, normal);
         if (depth.cols != width || depth.rows != height || normal.cols != width || normal.rows != height) {
-            std::cout << "Depth and Normal doesn't match the images' size!\n";
-            RescaleMatToTargetSize<float>(depth, depth, cv::Size2i(width, height));
-            RescaleMatToTargetSize<cv::Vec3f>(normal, normal, cv::Size2i(width, height));
+            std::cout << "resize depth and normal to target size\n";
+            cv::resize(depth, depth, cv::Size(width, height), 0, 0, cv::INTER_NEAREST);
+            cv::resize(normal, normal, cv::Size(width, height), 0, 0, cv::INTER_NEAREST);
         }
         for (int col = 0; col < width; ++col) {
             for (int row = 0; row < height; ++row) {
@@ -862,30 +859,6 @@ void RescaleImageAndCamera(cv::Mat &src, cv::Mat &dst, cv::Mat &depth, Camera &c
     camera.height = rows;
 }
 
-template<typename TYPE>
-void RescaleMatToTargetSize(const cv::Mat &src, cv::Mat &dst, const cv::Size2i &target_size) {
-    if (src.cols == target_size.width && src.rows == target_size.height) {
-        return;
-    }
-    const float scale_x = target_size.width / static_cast<float>(src.cols);
-    const float scale_y = target_size.height / static_cast<float>(src.rows);
-
-    int type = src.type();
-    cv::Mat src_clone = src.clone();
-    dst = cv::Mat(target_size.height, target_size.width, type);
-
-    for (int r = 0; r < target_size.height; ++r) {
-        for (int c = 0; c < target_size.width; ++c) {
-            int o_r = static_cast<int>(r / scale_x);
-            int o_c = static_cast<int>(c / scale_y);
-            if (o_r < 0 || o_c < 0 || o_r >= src_clone.rows || o_c >= src_clone.cols) {
-                continue;
-            }
-            dst.at<TYPE>(r, c) = src_clone.at<TYPE>(o_r, o_c);
-        }
-    }
-}
-
 float3 Get3DPointonWorld(const int x, const int y, const float depth, const Camera camera) {
     float3 pointX;
     float3 tmpX;
@@ -982,61 +955,6 @@ void ReadPFM(const path &filename, cv::Mat &image) {
     }
 }
 
-
-void DepthCompareToWeak(const path &dense_folder, const std::vector<Problem> &problems) {
-    path depths_masks_dir = dense_folder / path("depths_masks");
-    if (!exists(depths_masks_dir)) {
-        std::cout << "Error: cannot find depths_masks folder" << std::endl;
-        return;
-    }
-    const float thershold = 0.5f;  // make sure the depth error is less than 0.5 * interval
-    for (const auto &problem: problems) {
-        path ref_cam_path = dense_folder / path("cams") / path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
-        Camera cam;
-        ReadCamera(ref_cam_path, cam);
-        float interval = cam.interval;
-        // std::cout << "interval: " << interval << std::endl;
-        path predicted_depth_path = problem.result_folder / path("depths.bin");
-        cv::Mat predicted_depth;
-        ReadBinMat(predicted_depth_path, predicted_depth);
-
-        std::stringstream ss;
-        ss << std::setw(4) << std::setfill('0') << problem.ref_image_id;
-        std::string format_index = ss.str();
-        std::string gt_depth_name = "depth_map_" + format_index + ".pfm";
-        path gt_depth_path = depths_masks_dir / path(gt_depth_name);
-        if (!exists(gt_depth_path)) {
-            std::cout << "Error: cannot find ground truth depth" << gt_depth_path << std::endl;
-            continue;
-        }
-        cv::Mat gt_depth;
-        ReadPFM(gt_depth_path, gt_depth);
-        int width = predicted_depth.cols;
-        int height = predicted_depth.rows;
-        cv::Mat error_info = cv::Mat::zeros(height, width, CV_8UC1);
-        for (int r = 0; r < height; ++r) {
-            for (int c = 0; c < width; ++c) {
-                float depth_p = predicted_depth.at<float>(r, c);
-                float depth_g = gt_depth.at<float>(r, c);
-                if (depth_g > 1e-6) {
-                    if (fabs(depth_p - depth_g) <= interval * thershold) {
-                        error_info.at<uchar>(r, c) = 1; // Strong
-                    } else {
-                        error_info.at<uchar>(r, c) = 0; // Weak
-                    }
-                } else {
-                    error_info.at<uchar>(r, c) = 2;
-                }
-            }
-        }
-        path error_info_path = problem.result_folder / path("error.bin");
-        WriteBinMat(error_info_path, error_info);
-        path error_info_img_path = problem.result_folder / path("error.jpg");
-        ShowWeakImage(error_info_img_path, error_info);
-        std::cout << "Generate error map for " << problem.ref_image_id << " done\n";
-    }
-}
-
 void WeakVisFilter(
         const std::vector<Problem> &problems,
         const std::vector<Camera> &cameras,
@@ -1123,117 +1041,6 @@ void WeakVisFilter(
     pool.join();
 }
 
-void ShowCounterMap(const path &counter_path, const cv::Mat &counter_map) {
-    cv::Mat counter_map_show;
-    cv::normalize(counter_map, counter_map_show, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    cv::applyColorMap(counter_map_show, counter_map_show, cv::COLORMAP_JET);
-    cv::imwrite(counter_path.string(), counter_map_show);
-}
-
-void CounterMap(const path &dense_folder, const std::vector<Problem> &problems) {
-    int num_images = problems.size();
-    path image_folder = dense_folder / path("images");
-    path cam_folder = dense_folder / path("cams");
-
-    std::vector<Camera> cameras;
-    std::vector<cv::Mat> depths;
-    std::vector<cv::Mat> normals;
-    std::vector<cv::Mat> blocks;
-    std::vector<cv::Mat> weaks;
-    std::vector<cv::Mat> selected_views;
-    cameras.clear();
-    depths.clear();
-    normals.clear();
-    blocks.clear();
-    weaks.clear();
-    selected_views.clear();
-    std::unordered_map<int, int> imageIdToindexMap;
-
-    for (int i = 0; i < num_images; ++i) {
-        const auto &problem = problems[i];
-        std::cout << "Reading image " << std::setw(8) << std::setfill('0') << i << "..." << std::endl;
-        path image_path = image_folder / path(ToFormatIndex(problem.ref_image_id) + problem.img_ext);
-        imageIdToindexMap.emplace(problem.ref_image_id, i);
-        cv::Mat image = cv::imread(image_path.string(), cv::IMREAD_COLOR);
-        path cam_path = cam_folder / path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
-        Camera camera;
-        ReadCamera(cam_path, camera);
-
-        path depth_path = problem.result_folder / path("depths.bin");
-        path normal_path = problem.result_folder / path("normals.bin");
-        path weak_path = problem.result_folder / path("weak.bin");
-        path select_view_path = problem.result_folder / path("selected_views.bin");
-        cv::Mat depth, normal, weak, select_view;
-        ReadBinMat(depth_path, depth);
-        ReadBinMat(normal_path, normal);
-        ReadBinMat(weak_path, weak);
-        ReadBinMat(select_view_path, select_view);
-
-        cv::Mat scaled_image;
-        RescaleImageAndCamera(image, scaled_image, depth, camera);
-        cameras.emplace_back(camera);
-        depths.emplace_back(depth);
-        normals.emplace_back(normal);
-        RescaleMatToTargetSize<uchar>(weak, weak, cv::Size2i(depth.cols, depth.rows));
-        weaks.emplace_back(weak);
-        selected_views.emplace_back(select_view);
-    }
-
-    for (int i = 0; i < num_images; ++i) {
-        std::cout << "Computing counter map " << std::setw(8) << std::setfill('0') << i << "..." << std::endl;
-        const auto &problem = problems[i];
-        int ref_index = imageIdToindexMap[problem.ref_image_id];
-        const int cols = depths[ref_index].cols;
-        const int rows = depths[ref_index].rows;
-        int num_ngb = problem.src_image_ids.size();
-        cv::Mat counter_map = cv::Mat::zeros(rows, cols, CV_32FC1);
-        for (int r = 0; r < rows; ++r) {
-            for (int c = 0; c < cols; ++c) {
-                float ref_depth = depths[ref_index].at<float>(r, c);
-                if (ref_depth <= 0.0)
-                    continue;
-                const cv::Vec3f ref_normal = normals[ref_index].at<cv::Vec3f>(r, c);
-                float3 PointX = Get3DPointonWorld(c, r, ref_depth, cameras[ref_index]);
-                int num_consistent = 0;
-                for (int j = 0; j < num_ngb; ++j) {
-                    int src_index = imageIdToindexMap[problem.src_image_ids[j]];
-                    const int src_cols = depths[src_index].cols;
-                    const int src_rows = depths[src_index].rows;
-                    float2 point;
-                    float proj_depth;
-                    ProjectCamera(PointX, cameras[src_index], point, proj_depth);
-                    int src_r = int(point.y + 0.5f);
-                    int src_c = int(point.x + 0.5f);
-                    if (src_c >= 0 && src_c < src_cols && src_r >= 0 && src_r < src_rows) {
-                        float src_depth = depths[src_index].at<float>(src_r, src_c);
-                        if (src_depth <= 0.0)
-                            continue;
-                        const cv::Vec3f src_normal = normals[src_index].at<cv::Vec3f>(src_r, src_c);
-                        float3 tmp_X = Get3DPointonWorld(src_c, src_r, src_depth, cameras[src_index]);
-                        float2 tmp_pt;
-                        ProjectCamera(tmp_X, cameras[ref_index], tmp_pt, proj_depth);
-                        float reproj_error = sqrt(pow(c - tmp_pt.x, 2) + pow(r - tmp_pt.y, 2));
-                        float relative_depth_diff = fabs(proj_depth - ref_depth) / ref_depth;
-                        float angle = GetAngle(ref_normal, src_normal);
-
-                        if (reproj_error < 1.0f && relative_depth_diff < 0.01f && angle < 0.174533f) {
-                            num_consistent++;
-                        }
-                    }
-                }
-                counter_map.at<float>(r, c) = num_consistent / 5.0f;
-                if (counter_map.at<float>(r, c) > 1.0f) {
-                    counter_map.at<float>(r, c) = 1.0f;
-                }
-            }
-        }
-        path save_path = problem.result_folder / path("counter_map.bin");
-        WriteBinMat(save_path, counter_map);
-        path show_path = problem.result_folder / path("counter_map.jpg");
-        ShowCounterMap(show_path, counter_map);
-    }
-}
-
 void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name) {
     int num_images = problems.size();
     path image_folder = dense_folder / path("images");
@@ -1283,7 +1090,19 @@ void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, c
         ReadBinMat(normal_path, normal);
         ReadBinMat(weak_path, weak);
         ReadBinMat(confidence_path, confidence);
-
+        // check the size
+        if (normal.cols != depth.cols || normal.rows != depth.rows) {
+            std::cout << "Error: normal size is not equal to depth size" << std::endl;
+            continue;
+        }
+        if (weak.cols != depth.cols || weak.rows != depth.rows) {
+            std::cout << "Error: weak size is not equal to depth size" << std::endl;
+            continue;
+        }
+        if (confidence.cols != depth.cols || confidence.rows != depth.rows) {
+            std::cout << "Error: confidence size is not equal to depth size" << std::endl;
+            continue;
+        }
         cv::Mat scaled_image;
         RescaleImageAndCamera(image, scaled_image, depth, camera);
         images.emplace_back(scaled_image);
@@ -1292,11 +1111,9 @@ void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, c
         normals.emplace_back(normal);
         cv::Mat mask = cv::Mat::zeros(depth.rows, depth.cols, CV_8UC1);
         masks.emplace_back(mask);
-        RescaleMatToTargetSize<uchar>(weak, weak, cv::Size2i(depth.cols, depth.rows));
         weaks.emplace_back(weak);
         cv::Mat skip_weak = cv::Mat::zeros(depth.rows, depth.cols, CV_8UC1);
         skip_weaks.emplace_back(skip_weak);
-        RescaleMatToTargetSize<uchar>(confidence, confidence, cv::Size2i(depth.cols, depth.rows));
         confidences.emplace_back(confidence);
     }
 
@@ -1448,6 +1265,20 @@ void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &probl
         ReadBinMat(weak_path, weak);
         ReadBinMat(confidence_path, confidence);
 
+        // check the size
+        if (normal.cols != depth.cols || normal.rows != depth.rows) {
+            std::cout << "Error: normal size is not equal to depth size" << std::endl;
+            continue;
+        }
+        if (weak.cols != depth.cols || weak.rows != depth.rows) {
+            std::cout << "Error: weak size is not equal to depth size" << std::endl;
+            continue;
+        }
+        if (confidence.cols != depth.cols || confidence.rows != depth.rows) {
+            std::cout << "Error: confidence size is not equal to depth size" << std::endl;
+            continue;
+        }
+
         cv::Mat scaled_image;
         RescaleImageAndCamera(image, scaled_image, depth, camera);
         images.emplace_back(scaled_image);
@@ -1459,7 +1290,6 @@ void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &probl
         weaks.emplace_back(weak);
         cv::Mat skip_weak = cv::Mat::zeros(depth.rows, depth.cols, CV_8UC1);
         skip_weaks.emplace_back(skip_weak);
-        RescaleMatToTargetSize<uchar>(confidence, confidence, cv::Size2i(depth.cols, depth.rows));
         confidences.emplace_back(confidence);
     }
 
@@ -1625,6 +1455,20 @@ void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &probl
         ReadBinMat(normal_path, normal);
         ReadBinMat(weak_path, weak);
         ReadBinMat(confidence_path, confidence);
+        // check the size
+        if (normal.cols != depth.cols || normal.rows != depth.rows) {
+            std::cout << "Error: normal size is not equal to depth size" << std::endl;
+            continue;
+        }
+        if (weak.cols != depth.cols || weak.rows != depth.rows) {
+            std::cout << "Error: weak size is not equal to depth size" << std::endl;
+            continue;
+        }
+        if (confidence.cols != depth.cols || confidence.rows != depth.rows) {
+            std::cout << "Error: confidence size is not equal to depth size" << std::endl;
+            continue;
+        }
+
         cv::Mat scaled_image;
         RescaleImageAndCamera(image, scaled_image, depth, camera);
         images.emplace_back(scaled_image);
@@ -1636,7 +1480,6 @@ void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &probl
         weaks.emplace_back(weak);
         cv::Mat skip_weak = cv::Mat::zeros(depth.rows, depth.cols, CV_8UC1);
         skip_weaks.emplace_back(skip_weak);
-        RescaleMatToTargetSize<uchar>(confidence, confidence, cv::Size2i(depth.cols, depth.rows));
         confidences.emplace_back(confidence);
     }
 
