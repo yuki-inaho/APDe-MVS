@@ -67,8 +67,23 @@ def save_anns(origin_img, anns, save_path):
         write_bin_mat(save_path.replace('.png', '.bin'), mask)
 
 
-if __name__ == "__main__":
+def prepare_checkpoints(model='vit_h'):
+    if model == 'vit_h':
+        url = 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth'
+    elif model == 'vit_l':
+        url = 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth'
+    elif model == 'vit_b':
+        url = 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth'
+    else:
+        raise NotImplementedError
+    if not os.path.exists('checkpoints'):
+        os.mkdir('checkpoints')
+    if not os.path.exists('checkpoints/{}.pth'.format(model)):
+        os.system('wget {} -O checkpoints/{}.pth'.format(url, model))
+    return 'checkpoints/{}.pth'.format(model)
 
+
+if __name__ == "__main__":
     if args.scans is not None:
         scans = args.scans
     else:
@@ -76,8 +91,8 @@ if __name__ == "__main__":
         scans = os.listdir(args.work_dir)
     print("total scans: ", len(scans))
 
-    sam_checkpoint = "checkpoints/sam_vit_h_4b8939.pth"
     model_type = "vit_h"
+    sam_checkpoint = prepare_checkpoints(model_type)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     sam.to(device=device)
