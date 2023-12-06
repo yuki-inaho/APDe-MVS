@@ -2659,80 +2659,43 @@ void APD::RunPatchMatch() {
 	block_size_half.z = 1;
 
 	InitRandomStates << <grid_size_full, block_size_full >> > (helper_cuda);
-	CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
 	if (problem.params.use_APD) {
-
 		FindNearestStrongPoint << <grid_size_full, block_size_full >> > (helper_cuda);
-		CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
-       	// ExportNearestStrong();
-
         GenAnchors << <grid_size_full, block_size_full >> > (helper_cuda);
-		CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
 		NeigbourUpdate << <grid_size_full, block_size_full >> > (helper_cuda);
-		CUDA_SAFE_CALL(cudaDeviceSynchronize());
 	}
 
     if (problem.export_anchor) {
+        CUDA_SAFE_CALL(cudaDeviceSynchronize());
         ExportAnchors();
     }
 
-	std::cout << "Generate anchors done\n";
 	RandomInitialization << <grid_size_full, block_size_full >> > (helper_cuda);
-	CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
 	for (int i = 0; i < params_host.max_iterations; ++i) {
 		BlackPixelUpdateStrong << <grid_size_half, block_size_half >> > (i, helper_cuda);
-		CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
 		RedPixelUpdateStrong << <grid_size_half, block_size_half >> > (i, helper_cuda);
-		CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
-		std::cout << "Iteration " << i << " strong done\n";
 
 		if (problem.params.use_APD) {
 			RANSACToGetFitPlane << <grid_size_full, block_size_full >> > (helper_cuda);
-			CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
-            // ExportFitNormal();
-
-			std::cout << "Compute normal done\n";
 			BlackPixelUpdateWeak << <grid_size_half, block_size_half >> > (i, helper_cuda);
-			CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
 			RedPixelUpdateWeak << <grid_size_half, block_size_half >> > (i, helper_cuda);
-			CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
-			std::cout << "Iteration " << i << " -weak- done\n";
 		}
 	}
 
 	GetDepthandNormal << <grid_size_full, block_size_full >> > (helper_cuda);
-	CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
 	BlackPixelFilterStrong << <grid_size_half, block_size_half >> > (helper_cuda);
-	CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
 	RedPixelFilterStrong << <grid_size_half, block_size_half >> > (helper_cuda);
-	CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
     DepthToWeak << <grid_size_full, block_size_full >> > (helper_cuda);
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
     if (problem.params.geom_consistency || problem.params.use_APD) {
         ConfidenceCompute << < grid_size_full, block_size_full >> > (helper_cuda);
-        CUDA_SAFE_CALL(cudaDeviceSynchronize());
     }
-
     LocalRefine << <grid_size_full, block_size_full >> > (helper_cuda);
-	CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
+	CUDA_SAFE_CALL(cudaDeviceSynchronize());
 	cudaMemcpy(plane_hypotheses_host.get(), plane_hypotheses_cuda, sizeof(float4) * width * height, cudaMemcpyDeviceToHost);
 	cudaMemcpy(weak_info_host.ptr<uchar>(0), weak_info_cuda, width * height * sizeof(uchar), cudaMemcpyDeviceToHost);
     if (problem.params.geom_consistency || problem.params.use_APD) {
         cudaMemcpy(confidence_host.ptr<uchar>(0), confidence_cuda, width * height * sizeof(uchar), cudaMemcpyDeviceToHost);
     }
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
 }
