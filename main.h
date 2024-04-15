@@ -33,7 +33,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>
-#include <boost/asio.hpp>
+// Includes ThreadPool
+#include "ThreadPool.h"
 
 // Define some const var
 #define MAX_IMAGES 32

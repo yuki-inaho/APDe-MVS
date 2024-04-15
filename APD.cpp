@@ -1034,11 +1034,14 @@ void WeakVisFilter(
     };
     // get max threads num
     const int num_threads = MIN(std::thread::hardware_concurrency(), depths.size());
-    boost::asio::thread_pool pool(num_threads);
+    ThreadPool pool(num_threads);
+    std::vector<std::future<void>> results;
     for (int ref_index = 0; ref_index < num_images; ++ref_index) {
-        boost::asio::post(pool, std::bind(task, ref_index));
+        results.emplace_back(pool.enqueue(task, ref_index));
     }
-    pool.join();
+    for (auto &&result: results) {
+        result.get();
+    }
 }
 
 void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name) {

@@ -38,6 +38,7 @@ cuda_add_executable(
         APD.cpp
         APD.cu
         main.cpp
+        ThreadPool.h
 )
 
 set_target_properties(APD PROPERTIES CUDA_ARCHITECTURES "70;75;80;89")
