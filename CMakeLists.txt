@@ -3,7 +3,7 @@ project(APD)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
 
 # recommand >=4.6.0
 find_package(OpenCV REQUIRED)
