@@ -83,6 +83,42 @@ def prepare_checkpoints(model='vit_h'):
     return 'checkpoints/{}.pth'.format(model)
 
 
+class SAMRunner:
+    def __init__(self, work_dir, scans, model_type='vit_h', max_size=2560):
+        self.model_type = model_type
+        self.work_dir = work_dir
+        self.scans = scans
+        self.max_size = max_size
+
+    def run(self):
+        sam_checkpoint = prepare_checkpoints(self.model_type)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        sam = sam_model_registry[self.model_type](checkpoint=sam_checkpoint)
+        sam.to(device=device)
+        mask_generator = SamAutomaticMaskGenerator(sam)
+        print("model loaded")
+
+        for scan in scans:
+            scan_path = os.path.join(self.work_dir, scan)
+            image_folder = os.path.join(scan_path, 'images')
+            if not os.path.exists(image_folder):
+                raise Exception("image path", image_folder, "not exists for scan: ", scan)
+            mask_folder = os.path.join(scan_path, 'sa_masks')
+            if not os.path.exists(mask_folder):
+                os.mkdir(mask_folder)
+            print("processing scan: ", scan)
+            for img_name in tqdm.tqdm(os.listdir(image_folder)):
+                img_path = os.path.join(image_folder, img_name)
+                save_path = os.path.join(mask_folder, img_name.split('.')[0] + '.png')  # save as png
+                image = cv2.imread(img_path)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                if max(image.shape) > self.max_size:
+                    scale = self.max_size / max(image.shape)
+                    image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
+                masks = mask_generator.generate(image)
+                save_anns(image, masks, save_path)
+
+
 if __name__ == "__main__":
     if args.scans is not None:
         scans = args.scans
@@ -91,30 +127,6 @@ if __name__ == "__main__":
         scans = os.listdir(args.work_dir)
     print("total scans: ", len(scans))
 
-    model_type = "vit_h"
-    sam_checkpoint = prepare_checkpoints(model_type)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-    sam.to(device=device)
-    mask_generator = SamAutomaticMaskGenerator(sam)
-    print("model loaded")
-
-    for scan in scans:
-        scan_path = os.path.join(args.work_dir, scan)
-        image_folder = os.path.join(scan_path, 'images')
-        if not os.path.exists(image_folder):
-            raise Exception("image path not exists")
-        mask_folder = os.path.join(scan_path, 'sa_masks')
-        if not os.path.exists(mask_folder):
-            os.mkdir(mask_folder)
-        print("processing scan: ", scan)
-        for img_name in tqdm.tqdm(os.listdir(image_folder)):
-            img_path = os.path.join(image_folder, img_name)
-            save_path = os.path.join(mask_folder, img_name.split('.')[0] + '.png')  # save as png
-            image = cv2.imread(img_path)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            if max(image.shape) > args.max_size:
-                scale = args.max_size / max(image.shape)
-                image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
-            masks = mask_generator.generate(image)
-            save_anns(image, masks, save_path)
+    sam_runner = SAMRunner(args.work_dir, scans, max_size=args.max_size)
+    sam_runner.run()
+    print("All done")

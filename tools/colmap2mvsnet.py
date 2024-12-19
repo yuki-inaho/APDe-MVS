@@ -101,6 +101,7 @@ def write_cameras_text(path, cameras):
                 fid.write(" %f" % param)
             fid.write("\n")
 
+
 def read_cameras_binary(path_to_model_file):
     """
     see: src/base/reconstruction.cc

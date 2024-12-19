@@ -88,11 +88,12 @@ struct PatchMatchParams {
     int weak_radius = 5;
     int weak_increment = 5;
     bool use_APD = true;
+    bool use_sa = true;
     int weak_peak_radius = 2;
     int rotate_time = 4;
     float ransac_threshold = 0.005;
-//    float geom_factor = 0.2f; // eth
-     float geom_factor = 0.05f; // tat
+    float geom_factor = 0.2f; // eth
+     // float geom_factor = 0.05f; // tat
     RunState state;
 };
 

@@ -14,6 +14,7 @@ opt::variables_map ParseArgs(int argc, char **argv) {
             ("only_fuse,f", opt::value<bool>()->default_value(false), "only fuse depths")
             ("no_fuse,F", opt::value<bool>()->default_value(false), "skip fuse")
             ("memory_cache,m", opt::value<bool>()->default_value(true), "use memory cache")
+            ("use_sa,s", opt::value<bool>()->default_value(true), "use segment anything results")
             ("flush", opt::value<bool>()->default_value(false), "Flush mat to disk")
             ("export_anchor,n", opt::value<bool>()->default_value(false), "Export anchor points to disk")
             ("help,h", "produce help message");
@@ -208,6 +209,7 @@ int main(int argc, char **argv) {
     bool only_fuse = vm["only_fuse"].as<bool>();
     bool no_fuse = vm["no_fuse"].as<bool>();
     bool use_memory_cache = vm["memory_cache"].as<bool>();
+    bool use_sa = vm["use_sa"].as<bool>();
     bool flush = vm["flush"].as<bool>();
     bool export_anchor = vm["export_anchor"].as<bool>();
     // it is not necessary to use memory cache when only_fuse is true
@@ -226,6 +228,7 @@ int main(int argc, char **argv) {
     std::cout << "only_fuse    : " << only_fuse << std::endl;
     std::cout << "no_fuse      : " << no_fuse << std::endl;
     std::cout << "memory_cache : " << use_memory_cache << std::endl;
+    std::cout << "use_sa       : " << use_sa << std::endl;
     std::cout << "flush        : " << flush << std::endl;
     std::cout << "export_anchor: " << export_anchor << std::endl;
     std::cout << "============================================================" << std::endl;
@@ -301,6 +304,7 @@ int main(int argc, char **argv) {
                 params.geom_consistency = false;
                 params.max_iterations = 3;
                 params.weak_peak_radius = 6;
+                params.use_sa = use_sa;
             }
             problem.show_medium_result = false;
             problem.iteration = iteration_index;
@@ -308,8 +312,8 @@ int main(int argc, char **argv) {
             ProcessProblem(problem);
         }
         iteration_index++;
-        std::cout << "======== iteration " << iteration_index << "========" << std::endl;
         for (int j = 0; j < geom_iteration; ++j) {
+            std::cout << "======== iteration " << iteration_index << "========" << std::endl;
             bool is_last_iteration = (i == round_num - 1 && j == geom_iteration - 1);
             for (auto &problem: problems) {
                 {
@@ -325,6 +329,7 @@ int main(int argc, char **argv) {
                     params.geom_consistency = true;
                     params.max_iterations = 3;
                     params.weak_peak_radius = MAX(4 - 2 * j, 2);
+                    params.use_sa = use_sa;
                 }
                 if (is_last_iteration && export_anchor) {
                     problem.export_anchor = true;

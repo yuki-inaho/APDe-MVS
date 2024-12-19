@@ -2,6 +2,7 @@ import os
 import multiprocessing as mp
 import argparse
 import glob
+from tools.run_SAM import SAMRunner
 
 #####################################################################################################
 # args:
@@ -16,6 +17,7 @@ parser.add_argument('--reservation', type=str, default=None, help='reservation f
 parser.add_argument('--only_fuse', action='store_true', default=False)
 parser.add_argument('--no_fuse', action='store_true', default=False)
 parser.add_argument('--memory_cache', action='store_true', default=False)
+parser.add_argument('--use_sa', action='store_true', default=False)
 parser.add_argument('--flush', action='store_true', default=False)
 parser.add_argument('--review', action='store_true', default=False)
 parser.add_argument('--backup_code', action='store_true', default=False)
@@ -63,16 +65,23 @@ def worker(scan):
     elif args.data_dir.find('ETH3D') != -1:
         dataset = 'ETH3D'
 
+    if args.use_sa:
+        mask_folder = os.path.join(scan_dir, 'sa_masks')
+        if not os.path.exists(mask_folder):
+            sam_runner = SAMRunner(scan_dir, [scan], max_size=2560)
+            sam_runner.run()
+
     APD_path = os.path.join(scan_dir, 'APD')
     if not os.path.exists(APD_path):
         os.makedirs(APD_path)
 
     call_APD_cmd = \
         '{} --dense_folder {} --gpu_index {} --dataset {} ' \
-        '--only_fuse {} --no_fuse {} --memory_cache {} --flush {} --export_anchor {}'.format(
+        '--only_fuse {} --no_fuse {} --memory_cache {} --use_sa {} --flush {} --export_anchor {}'.format(
             args.APD_path, scan_dir, gpu_index, dataset,
             'true' if args.only_fuse else 'false',
             'true' if args.no_fuse else 'false',
+            'true' if args.use_sa else 'false',
             'true' if args.memory_cache else 'false',
             'true' if args.flush else 'false',
             'true' if args.export_anchor else 'false'

@@ -348,7 +348,7 @@ bool ExportPointCloud(const path &point_cloud_path, std::vector<PointList> &poin
             pixel[2] = static_cast<uchar>(pointcloud[idx].color.z);
             out.write((char *) &pixel[0], sizeof(uchar));
             out.write((char *) &pixel[1], sizeof(uchar));
-            out.write((char *) &pixel[2], sizeof(uchar));   
+            out.write((char *) &pixel[2], sizeof(uchar));
         }
     }
     out.close();
@@ -638,12 +638,16 @@ void APD::InuputInitialization() {
                 }
             }
         }
-        if (exists(sa_mask_folder)) {
-            path sa_mask_path = sa_mask_folder / path(ToFormatIndex(problem.ref_image_id) + ".bin");
-            ReadBinMat(sa_mask_path, sa_mask_host);
-            if (sa_mask_host.cols != width || sa_mask_host.rows != height) {
-                std::cout << "resize sa mask to target size\n";
-                cv::resize(sa_mask_host, sa_mask_host, cv::Size(width, height), 0, 0, cv::INTER_NEAREST);
+        if (params_host.use_sa) {
+            if (exists(sa_mask_folder)) {
+                path sa_mask_path = sa_mask_folder / path(ToFormatIndex(problem.ref_image_id) + ".bin");
+                ReadBinMat(sa_mask_path, sa_mask_host);
+                if (sa_mask_host.cols != width || sa_mask_host.rows != height) {
+                    std::cout << "resize sa mask to target size\n";
+                    cv::resize(sa_mask_host, sa_mask_host, cv::Size(width, height), 0, 0, cv::INTER_NEAREST);
+                }
+            } else {
+                std::cout << "Can't find sa mask folder: " << sa_mask_folder << std::endl;
             }
         }
         std::cout << "Weak count: " << weak_count << " / " << weak_info_host.cols * weak_info_host.rows << " = "
