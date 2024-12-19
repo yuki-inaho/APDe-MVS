@@ -68,7 +68,7 @@ def worker(scan):
     if args.use_sa:
         mask_folder = os.path.join(scan_dir, 'sa_masks')
         if not os.path.exists(mask_folder):
-            sam_runner = SAMRunner(scan_dir, [scan], max_size=2560)
+            sam_runner = SAMRunner(args.data_dir, [scan], max_size=2560)
             sam_runner.run()
 
     APD_path = os.path.join(scan_dir, 'APD')

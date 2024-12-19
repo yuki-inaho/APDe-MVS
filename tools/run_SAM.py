@@ -7,12 +7,6 @@ import tqdm
 import argparse
 import matplotlib.pyplot as plt
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--work_dir', type=str, default=None)
-parser.add_argument('--max_size', type=int, default=2560)
-parser.add_argument('--scans', type=str, nargs='+', default=None)
-args = parser.parse_args()
-
 
 def write_bin_mat(filename, mat):
     with open(filename, 'wb') as f:
@@ -98,7 +92,7 @@ class SAMRunner:
         mask_generator = SamAutomaticMaskGenerator(sam)
         print("model loaded")
 
-        for scan in scans:
+        for scan in self.scans:
             scan_path = os.path.join(self.work_dir, scan)
             image_folder = os.path.join(scan_path, 'images')
             if not os.path.exists(image_folder):
@@ -120,6 +114,11 @@ class SAMRunner:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--work_dir', type=str, default=None)
+    parser.add_argument('--max_size', type=int, default=2560)
+    parser.add_argument('--scans', type=str, nargs='+', default=None)
+    args = parser.parse_args()
     if args.scans is not None:
         scans = args.scans
     else:
