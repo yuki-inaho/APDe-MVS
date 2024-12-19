@@ -8,3 +8,4 @@ cmake*
 data
 run_*.sh
 checkpoints
+*__pycache__/
