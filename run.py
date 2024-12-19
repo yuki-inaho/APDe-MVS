@@ -17,7 +17,7 @@ parser.add_argument('--reservation', type=str, default=None, help='reservation f
 parser.add_argument('--only_fuse', action='store_true', default=False)
 parser.add_argument('--no_fuse', action='store_true', default=False)
 parser.add_argument('--memory_cache', action='store_true', default=False)
-parser.add_argument('--use_sa', action='store_true', default=False)
+parser.add_argument('--no_sam', action='store_true', default=False)
 parser.add_argument('--flush', action='store_true', default=False)
 parser.add_argument('--review', action='store_true', default=False)
 parser.add_argument('--backup_code', action='store_true', default=False)
@@ -65,7 +65,7 @@ def worker(scan):
     elif args.data_dir.find('ETH3D') != -1:
         dataset = 'ETH3D'
 
-    if args.use_sa:
+    if not args.no_sam:
         mask_folder = os.path.join(scan_dir, 'sa_masks')
         if not os.path.exists(mask_folder):
             sam_runner = SAMRunner(args.data_dir, [scan], max_size=2560)
@@ -81,7 +81,7 @@ def worker(scan):
             args.APD_path, scan_dir, gpu_index, dataset,
             'true' if args.only_fuse else 'false',
             'true' if args.no_fuse else 'false',
-            'true' if args.use_sa else 'false',
+            'false' if args.no_sam else 'true',
             'true' if args.memory_cache else 'false',
             'true' if args.flush else 'false',
             'true' if args.export_anchor else 'false'
