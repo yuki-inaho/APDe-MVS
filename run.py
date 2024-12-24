@@ -77,7 +77,7 @@ def worker(scan):
 
     call_APD_cmd = \
         '{} --dense_folder {} --gpu_index {} --dataset {} ' \
-        '--only_fuse {} --no_fuse {} --memory_cache {} --use_sa {} --flush {} --export_anchor {}'.format(
+        '--only_fuse {} --no_fuse {}  --use_sa {} --memory_cache {} --flush {} --export_anchor {}'.format(
             args.APD_path, scan_dir, gpu_index, dataset,
             'true' if args.only_fuse else 'false',
             'true' if args.no_fuse else 'false',
