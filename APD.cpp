@@ -1048,7 +1048,7 @@ void WeakVisFilter(
     }
 }
 
-void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name) {
+void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name, bool export_color) {
     int num_images = problems.size();
     path image_folder = dense_folder / path("images");
     path cam_folder = dense_folder / path("cams");
@@ -1215,10 +1215,10 @@ void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, c
         }
     }
     path ply_path = dense_folder / path("APD") / path(name);
-    ExportPointCloud(ply_path, PointCloud);
+    ExportPointCloud(ply_path, PointCloud, export_color);
 }
 
-void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name) {
+void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name, bool export_color) {
     int num_images = problems.size();
     path image_folder = dense_folder / path("images");
     path cam_folder = dense_folder / path("cams");
@@ -1411,10 +1411,10 @@ void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &probl
         }
     }
     path ply_path = dense_folder / path("APD") / path(name);
-    ExportPointCloud(ply_path, PointCloud);
+    ExportPointCloud(ply_path, PointCloud, export_color);
 }
 
-void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name) {
+void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name, bool export_color) {
     int num_images = problems.size();
     path image_folder = dense_folder / path("images");
     path cam_folder = dense_folder / path("cams");
@@ -1580,5 +1580,5 @@ void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &probl
         printf("skip_weak: %d\n", skip_weak);
     }
     path ply_path = dense_folder / path("APD") / path(name);
-    ExportPointCloud(ply_path, PointCloud);
+    ExportPointCloud(ply_path, PointCloud, export_color);
 }

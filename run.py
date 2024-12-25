@@ -18,6 +18,7 @@ parser.add_argument('--only_fuse', action='store_true', default=False)
 parser.add_argument('--no_fuse', action='store_true', default=False)
 parser.add_argument('--memory_cache', action='store_true', default=False)
 parser.add_argument('--no_sam', action='store_true', default=False)
+parser.add_argument('--no_color', action='store_true', default=False)
 parser.add_argument('--flush', action='store_true', default=False)
 parser.add_argument('--review', action='store_true', default=False)
 parser.add_argument('--backup_code', action='store_true', default=False)
@@ -77,14 +78,15 @@ def worker(scan):
 
     call_APD_cmd = \
         '{} --dense_folder {} --gpu_index {} --dataset {} ' \
-        '--only_fuse {} --no_fuse {}  --use_sa {} --memory_cache {} --flush {} --export_anchor {}'.format(
+        '--only_fuse {} --no_fuse {}  --use_sa {} --memory_cache {} --flush {} --export_anchor {} --export_color {}'.format(
             args.APD_path, scan_dir, gpu_index, dataset,
             'true' if args.only_fuse else 'false',
             'true' if args.no_fuse else 'false',
             'false' if args.no_sam else 'true',
             'true' if args.memory_cache else 'false',
             'true' if args.flush else 'false',
-            'true' if args.export_anchor else 'false'
+            'true' if args.export_anchor else 'false',
+            "false" if args.no_color else "true"
         )
 
     log_path = os.path.join(APD_path, 'log.txt')

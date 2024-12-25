@@ -33,13 +33,26 @@ bool ExportPointCloud(const path &point_cloud_path, std::vector<PointList> &poin
 
 std::string ToFormatIndex(int index);
 
-void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name = "APD.ply");
+void RunFusion(
+        const path &dense_folder,
+        const std::vector<Problem> &problems,
+        const std::string &name = "APD.ply",
+        bool export_color = true
+    );
 
-void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &problems,
-                     const std::string &name = "APD.ply");
+void RunFusion_TAT_A(
+        const path &dense_folder,
+        const std::vector<Problem> &problems,
+        const std::string &name = "APD.ply",
+        bool export_color = true
+    );
 
-void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &problems,
-                     const std::string &name = "APD.ply");
+void RunFusion_TAT_I(
+        const path &dense_folder,
+        const std::vector<Problem> &problems,
+        const std::string &name = "APD.ply",
+        bool export_color = true
+    );
 
 struct cudaTextureObjects {
     cudaTextureObject_t images[MAX_IMAGES];

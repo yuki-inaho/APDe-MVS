@@ -17,6 +17,7 @@ opt::variables_map ParseArgs(int argc, char **argv) {
             ("use_sa,s", opt::value<bool>()->default_value(true), "use segment anything results")
             ("flush", opt::value<bool>()->default_value(false), "Flush mat to disk")
             ("export_anchor,n", opt::value<bool>()->default_value(false), "Export anchor points to disk")
+            ("export_color,c", opt::value<bool>()->default_value(true), "Export ply with color")
             ("help,h", "produce help message");
 
     opt::variables_map vm;
@@ -212,6 +213,7 @@ int main(int argc, char **argv) {
     bool use_sa = vm["use_sa"].as<bool>();
     bool flush = vm["flush"].as<bool>();
     bool export_anchor = vm["export_anchor"].as<bool>();
+    bool export_color = vm["export_color"].as<bool>();
     // it is not necessary to use memory cache when only_fuse is true
     if (only_fuse) {
         use_memory_cache = false;
@@ -231,6 +233,7 @@ int main(int argc, char **argv) {
     std::cout << "use_sa       : " << use_sa << std::endl;
     std::cout << "flush        : " << flush << std::endl;
     std::cout << "export_anchor: " << export_anchor << std::endl;
+    std::cout << "export_color : " << export_color << std::endl;
     std::cout << "============================================================" << std::endl;
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // set environment for processing
@@ -258,11 +261,11 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     if (only_fuse) {
         if (dataset == "TaT_a") {
-            RunFusion_TAT_A(dense_folder, problems, "APD.ply");
+            RunFusion_TAT_A(dense_folder, problems, "APD.ply", export_color);
         } else if (dataset == "TaT_i") {
-            RunFusion_TAT_I(dense_folder, problems, "APD.ply");
+            RunFusion_TAT_I(dense_folder, problems, "APD.ply", export_color);
         } else {
-            RunFusion(dense_folder, problems, "APD.ply");
+            RunFusion(dense_folder, problems, "APD.ply", export_color);
         }
         printf("Fusion done!\n");
         return EXIT_SUCCESS;
@@ -371,11 +374,11 @@ int main(int argc, char **argv) {
     }
     std::cout << "Run fusion\n";
     if (dataset == "TaT_a") {
-        RunFusion_TAT_A(dense_folder, problems, "APD.ply");
+        RunFusion_TAT_A(dense_folder, problems, "APD.ply", export_color);
     } else if (dataset == "TaT_i") {
-        RunFusion_TAT_I(dense_folder, problems, "APD.ply");
+        RunFusion_TAT_I(dense_folder, problems, "APD.ply", export_color);
     } else {
-        RunFusion(dense_folder, problems, "APD.ply");
+        RunFusion(dense_folder, problems, "APD.ply", export_color);
     }
     std::cout << "All done\n";
     return EXIT_SUCCESS;
