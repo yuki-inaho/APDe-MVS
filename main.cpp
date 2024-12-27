@@ -15,6 +15,8 @@ opt::variables_map ParseArgs(int argc, char **argv) {
             ("no_fuse,F", opt::value<bool>()->default_value(false), "skip fuse")
             ("memory_cache,m", opt::value<bool>()->default_value(true), "use memory cache")
             ("use_sa,s", opt::value<bool>()->default_value(true), "use segment anything results")
+            ("use_impetus,i", opt::value<bool>()->default_value(true), "use impetus")
+            ("weak_filter,w", opt::value<bool>()->default_value(true), "use weak filter")
             ("flush", opt::value<bool>()->default_value(false), "Flush mat to disk")
             ("export_anchor,n", opt::value<bool>()->default_value(false), "Export anchor points to disk")
             ("export_color,c", opt::value<bool>()->default_value(true), "Export ply with color")
@@ -211,6 +213,8 @@ int main(int argc, char **argv) {
     bool no_fuse = vm["no_fuse"].as<bool>();
     bool use_memory_cache = vm["memory_cache"].as<bool>();
     bool use_sa = vm["use_sa"].as<bool>();
+    bool use_impetus = vm["use_impetus"].as<bool>();
+    bool weak_filter = vm["weak_filter"].as<bool>();
     bool flush = vm["flush"].as<bool>();
     bool export_anchor = vm["export_anchor"].as<bool>();
     bool export_color = vm["export_color"].as<bool>();
@@ -231,6 +235,8 @@ int main(int argc, char **argv) {
     std::cout << "no_fuse      : " << no_fuse << std::endl;
     std::cout << "memory_cache : " << use_memory_cache << std::endl;
     std::cout << "use_sa       : " << use_sa << std::endl;
+    std::cout << "use_impetus  : " << use_impetus << std::endl;
+    std::cout << "weak_filter  : " << weak_filter << std::endl;
     std::cout << "flush        : " << flush << std::endl;
     std::cout << "export_anchor: " << export_anchor << std::endl;
     std::cout << "export_color : " << export_color << std::endl;
@@ -261,11 +267,11 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     if (only_fuse) {
         if (dataset == "TaT_a") {
-            RunFusion_TAT_A(dense_folder, problems, "APD.ply", export_color);
+            RunFusion_TAT_A(dense_folder, problems, "APD.ply",  weak_filter, export_color);
         } else if (dataset == "TaT_i") {
-            RunFusion_TAT_I(dense_folder, problems, "APD.ply", export_color);
+            RunFusion_TAT_I(dense_folder, problems, "APD.ply",  weak_filter, export_color);
         } else {
-            RunFusion(dense_folder, problems, "APD.ply", export_color);
+            RunFusion(dense_folder, problems, "APD.ply",  weak_filter, export_color);
         }
         printf("Fusion done!\n");
         return EXIT_SUCCESS;
@@ -308,6 +314,7 @@ int main(int argc, char **argv) {
                 params.max_iterations = 3;
                 params.weak_peak_radius = 6;
                 params.use_sa = use_sa;
+                params.use_impetus = use_impetus;
             }
             problem.show_medium_result = false;
             problem.iteration = iteration_index;
@@ -333,6 +340,7 @@ int main(int argc, char **argv) {
                     params.max_iterations = 3;
                     params.weak_peak_radius = MAX(4 - 2 * j, 2);
                     params.use_sa = use_sa;
+                    params.use_impetus = use_impetus;
                 }
                 if (is_last_iteration && export_anchor) {
                     problem.export_anchor = true;
@@ -374,11 +382,11 @@ int main(int argc, char **argv) {
     }
     std::cout << "Run fusion\n";
     if (dataset == "TaT_a") {
-        RunFusion_TAT_A(dense_folder, problems, "APD.ply", export_color);
+        RunFusion_TAT_A(dense_folder, problems, "APD.ply", weak_filter, export_color);
     } else if (dataset == "TaT_i") {
-        RunFusion_TAT_I(dense_folder, problems, "APD.ply", export_color);
+        RunFusion_TAT_I(dense_folder, problems, "APD.ply", weak_filter, export_color);
     } else {
-        RunFusion(dense_folder, problems, "APD.ply", export_color);
+        RunFusion(dense_folder, problems, "APD.ply", weak_filter, export_color);
     }
     std::cout << "All done\n";
     return EXIT_SUCCESS;

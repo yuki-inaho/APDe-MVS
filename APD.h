@@ -37,6 +37,7 @@ void RunFusion(
         const path &dense_folder,
         const std::vector<Problem> &problems,
         const std::string &name = "APD.ply",
+        bool weak_filter = true,
         bool export_color = true
     );
 
@@ -44,6 +45,7 @@ void RunFusion_TAT_A(
         const path &dense_folder,
         const std::vector<Problem> &problems,
         const std::string &name = "APD.ply",
+        bool weak_filter = true,
         bool export_color = true
     );
 
@@ -51,6 +53,7 @@ void RunFusion_TAT_I(
         const path &dense_folder,
         const std::vector<Problem> &problems,
         const std::string &name = "APD.ply",
+        bool weak_filter = true,
         bool export_color = true
     );
 

@@ -1403,7 +1403,7 @@ __device__ void CheckerboardPropagationStrong(
 	float cost_now = 0.0f;
 
 	for (int i = 0; i < num_images - 1; ++i) {
-		if (params->geom_consistency) {
+		if (params->geom_consistency && params->use_impetus) {
 			cost_now += view_weights[i] * (cost_vector_now[i] + params->geom_factor * ComputeGeomConsistencyCost(p, i + 1, plane_hypotheses[center], helper));
 		}
 		else {

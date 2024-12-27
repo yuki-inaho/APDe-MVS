@@ -18,6 +18,8 @@ parser.add_argument('--only_fuse', action='store_true', default=False)
 parser.add_argument('--no_fuse', action='store_true', default=False)
 parser.add_argument('--memory_cache', action='store_true', default=False)
 parser.add_argument('--no_sam', action='store_true', default=False)
+parser.add_argument('--no_impetus', action='store_true', default=False)
+parser.add_argument('--no_weak_filter', action='store_true', default=False)
 parser.add_argument('--no_color', action='store_true', default=False)
 parser.add_argument('--flush', action='store_true', default=False)
 parser.add_argument('--review', action='store_true', default=False)
@@ -77,8 +79,9 @@ def worker(scan):
         os.makedirs(APD_path)
 
     call_APD_cmd = \
-        '{} --dense_folder {} --gpu_index {} --dataset {} ' \
-        '--only_fuse {} --no_fuse {}  --use_sa {} --memory_cache {} --flush {} --export_anchor {} --export_color {}'.format(
+         '{} --dense_folder {} --gpu_index {} --dataset {} ' \
+         '--only_fuse {} --no_fuse {}  --use_sa {} --memory_cache {} --flush {} ' \
+         '--export_anchor {} --export_color {} --use_impetus {} --weak_filter {}'.format(
             args.APD_path, scan_dir, gpu_index, dataset,
             'true' if args.only_fuse else 'false',
             'true' if args.no_fuse else 'false',
@@ -86,7 +89,9 @@ def worker(scan):
             'true' if args.memory_cache else 'false',
             'true' if args.flush else 'false',
             'true' if args.export_anchor else 'false',
-            "false" if args.no_color else "true"
+            "false" if args.no_color else "true",
+            "false" if args.no_impetus else "true",
+            "false" if args.no_weak_filter else "true"
         )
 
     log_path = os.path.join(APD_path, 'log.txt')

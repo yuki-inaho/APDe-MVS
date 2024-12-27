@@ -1048,7 +1048,13 @@ void WeakVisFilter(
     }
 }
 
-void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name, bool export_color) {
+void RunFusion(
+    const path &dense_folder,
+    const std::vector<Problem> &problems,
+    const std::string &name,
+    bool weak_filter,
+    bool export_color
+) {
     int num_images = problems.size();
     path image_folder = dense_folder / path("images");
     path cam_folder = dense_folder / path("cams");
@@ -1124,7 +1130,9 @@ void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, c
         confidences.emplace_back(confidence);
     }
 
-    WeakVisFilter(problems, cameras, depths, weaks, confidences, dense_folder, skip_weaks);
+    if (weak_filter) {
+        WeakVisFilter(problems, cameras, depths, weaks, confidences, dense_folder, skip_weaks);
+    }
 
     std::vector<PointList> PointCloud;
     PointCloud.clear();
@@ -1218,7 +1226,13 @@ void RunFusion(const path &dense_folder, const std::vector<Problem> &problems, c
     ExportPointCloud(ply_path, PointCloud, export_color);
 }
 
-void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name, bool export_color) {
+void RunFusion_TAT_I(
+    const path &dense_folder,
+    const std::vector<Problem> &problems,
+    const std::string &name,
+    bool weak_filter,
+    bool export_color
+) {
     int num_images = problems.size();
     path image_folder = dense_folder / path("images");
     path cam_folder = dense_folder / path("cams");
@@ -1300,7 +1314,9 @@ void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &probl
         confidences.emplace_back(confidence);
     }
 
-    WeakVisFilter(problems, cameras, depths, weaks, confidences, dense_folder, skip_weaks);
+    if (weak_filter) {
+        WeakVisFilter(problems, cameras, depths, weaks, confidences, dense_folder, skip_weaks);
+    }
 
     std::vector<PointList> PointCloud;
     PointCloud.clear();
@@ -1414,7 +1430,13 @@ void RunFusion_TAT_I(const path &dense_folder, const std::vector<Problem> &probl
     ExportPointCloud(ply_path, PointCloud, export_color);
 }
 
-void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &problems, const std::string &name, bool export_color) {
+void RunFusion_TAT_A(
+    const path &dense_folder,
+    const std::vector<Problem> &problems,
+    const std::string &name,
+    bool weak_filter,
+    bool export_color
+) {
     int num_images = problems.size();
     path image_folder = dense_folder / path("images");
     path cam_folder = dense_folder / path("cams");
@@ -1490,7 +1512,9 @@ void RunFusion_TAT_A(const path &dense_folder, const std::vector<Problem> &probl
         confidences.emplace_back(confidence);
     }
 
-    WeakVisFilter(problems, cameras, depths, weaks, confidences, dense_folder, skip_weaks);
+    if (weak_filter) {
+        WeakVisFilter(problems, cameras, depths, weaks, confidences, dense_folder, skip_weaks);
+    }
 
     std::vector<PointList> PointCloud;
     PointCloud.clear();

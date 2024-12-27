@@ -7,12 +7,13 @@ import numpy as np
 #####################################################################################################
 # args:
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', type=str, default='/home/ud202381476/data/ETH3D/data')
-parser.add_argument('--eval_program', type=str, default='/home/ud202381476/data/ETH3D/multi-view-evaluation/build/ETH3DMultiViewEvaluation')
-parser.add_argument('--gt_dir', type=str, default='/home/ud202381476/data/ETH3D/gt')  
+parser.add_argument('--data_dir', type=str, default='/home/zzj/Work/Data/ETH3D/data')
+parser.add_argument('--eval_program', type=str, default='/home/zzj/Work/Data/ETH3D/multi-view-evaluation/build/ETH3DMultiViewEvaluation')
+parser.add_argument('--gt_dir', type=str, default='/home/zzj/Work/Data/ETH3D/gt')
 parser.add_argument('--scans', type=str, nargs='+', default=[])
 parser.add_argument('--reservation', type=str, default=None, help='reservation for the server, e.g. 3h30m10s')
 parser.add_argument('--no_save_ply', action='store_false', default=True)
+parser.add_argument('--work_num', type=int, default=6)
 args = parser.parse_args()
 
 def worker(scan):
@@ -39,9 +40,9 @@ def worker(scan):
         acc_dir = os.path.join(APD_dir, 'compare', 'acc')
         eval_cmd += ' --completeness_cloud_output_path {} --accuracy_cloud_output_path {}'.format(cmp_dir, acc_dir)
     result_path = os.path.join(APD_dir, 'result.txt')
-    if os.path.exists(result_path):
-        print('{} already exists'.format(result_path))
-        return
+    # if os.path.exists(result_path):
+    #     print('{} already exists'.format(result_path))
+    #     return
     eval_cmd += ' > {}'.format(result_path)
     print('eval_cmd: {}'.format(eval_cmd))
     os.system(eval_cmd)
@@ -135,7 +136,7 @@ if __name__ == "__main__":
                  'relief', 'relief_2', 'terrace', 'terrains']
 
     print('scans size: {}'.format(len(scans)))
-    pool = mp.Pool(processes=len(scans))
+    pool = mp.Pool(processes=min(len(scans), args.work_num))
     pool.map(worker, scans)
     pool.close()
     pool.join()

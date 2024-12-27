@@ -83,6 +83,7 @@ struct PatchMatchParams {
     float depth_min = 0.0f;
     float depth_max = 1.0f;
     bool geom_consistency = false;
+    bool use_impetus = true;
     int strong_radius = 5;
     int strong_increment = 2;
     int weak_radius = 5;
