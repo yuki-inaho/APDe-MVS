@@ -19,6 +19,7 @@ opt::variables_map ParseArgs(int argc, char **argv) {
             ("weak_filter,w", opt::value<bool>()->default_value(true), "use weak filter")
             ("flush", opt::value<bool>()->default_value(false), "Flush mat to disk")
             ("export_anchor,n", opt::value<bool>()->default_value(false), "Export anchor points to disk")
+            ("export_curve,r", opt::value<bool>()->default_value(false), "Export reliable curve to disk")
             ("export_color,c", opt::value<bool>()->default_value(true), "Export ply with color")
             ("help,h", "produce help message");
 
@@ -217,6 +218,7 @@ int main(int argc, char **argv) {
     bool weak_filter = vm["weak_filter"].as<bool>();
     bool flush = vm["flush"].as<bool>();
     bool export_anchor = vm["export_anchor"].as<bool>();
+    bool export_curve = vm["export_curve"].as<bool>();
     bool export_color = vm["export_color"].as<bool>();
     // it is not necessary to use memory cache when only_fuse is true
     if (only_fuse) {
@@ -239,6 +241,7 @@ int main(int argc, char **argv) {
     std::cout << "weak_filter  : " << weak_filter << std::endl;
     std::cout << "flush        : " << flush << std::endl;
     std::cout << "export_anchor: " << export_anchor << std::endl;
+    std::cout << "export_curve : " << export_curve << std::endl;
     std::cout << "export_color : " << export_color << std::endl;
     std::cout << "============================================================" << std::endl;
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -344,6 +347,9 @@ int main(int argc, char **argv) {
                 }
                 if (is_last_iteration && export_anchor) {
                     problem.export_anchor = true;
+                }
+                if (is_last_iteration && export_curve) {
+                    problem.export_reliable_curve = true;
                 }
                 problem.show_medium_result = (j == geom_iteration - 1);
                 problem.iteration = iteration_index;

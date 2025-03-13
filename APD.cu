@@ -987,7 +987,7 @@ __device__ void PlaneHypothesisRefinementStrong(
 
 		float temp_cost = 0.0f;
 		for (int j = 0; j < params->num_images - 1; ++j) {
-			if (params->geom_consistency) {
+			if (params->geom_consistency && params->use_impetus) {
 				temp_cost += view_weights[j] * (cost_vector[j] + params->geom_factor * ComputeGeomConsistencyCost(p, j + 1, temp_plane_hypothesis, helper));
 			}
 			else {
@@ -2100,7 +2100,7 @@ __global__ void NeigbourUpdate(
 }
 
 
-__global__ void DepthToWeak(DataPassHelper *helper) {
+__global__ void DepthToWeak(DataPassHelper *helper, float *reliable_curve) {
 	const int2 point = make_int2(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
 	const int width = helper->width;
 	const int height = helper->height;
@@ -2184,6 +2184,19 @@ __global__ void DepthToWeak(DataPassHelper *helper) {
 		p_cost /= weight_normal;
 		p_costs[p_disp + radius] = MIN(2.0f, p_cost);
 	}
+
+	if (reliable_curve != nullptr) {
+		if (p_costs_size != RELIABLE_CURVE_SAMPLE_NUM) {
+			printf("Export reliable curve error: p_costs_size != RELIABLE_CURVE_SAMPLE_NUM\n");
+
+		} else {
+			float *reliable_curve_cur = &(reliable_curve[center * p_costs_size]);
+			for (int i = 0; i < p_costs_size; ++i) {
+				reliable_curve_cur[i] = p_costs[i];
+			}
+		}
+	}
+
 	// find peaks
 	bool is_peak[p_costs_size];
 	for (int i = 0; i < p_costs_size; ++i) {
@@ -2635,6 +2648,17 @@ void APD::ExportNearestStrong() {
     cv::imwrite(nearest_strong_img_path.string(), nearest_strong_map);
 }
 
+void APD::ExportReliableCurve(std::shared_ptr<float []> reliable_curve) {
+	path reliable_curve_path = problem.result_folder / path("reliable_curve.bin");
+	ofstream out(reliable_curve_path, std::ios_base::binary);
+	// write width and height
+	out.write((char*)&width, sizeof(int));
+	out.write((char*)&height, sizeof(int));
+	const int num_sample = RELIABLE_CURVE_SAMPLE_NUM;
+	out.write((char*)&num_sample, sizeof(int));
+	out.write((char*)reliable_curve.get(), sizeof(float) * width * height * RELIABLE_CURVE_SAMPLE_NUM);
+	out.close();
+}
 
 void APD::RunPatchMatch() {
 	int BLOCK_W = 32;
@@ -2686,7 +2710,19 @@ void APD::RunPatchMatch() {
 	GetDepthandNormal << <grid_size_full, block_size_full >> > (helper_cuda);
 	BlackPixelFilterStrong << <grid_size_half, block_size_half >> > (helper_cuda);
 	RedPixelFilterStrong << <grid_size_half, block_size_half >> > (helper_cuda);
-    DepthToWeak << <grid_size_full, block_size_full >> > (helper_cuda);
+	float *reliable_curve_cuda = nullptr;
+	if (problem.export_reliable_curve) {
+		cudaMalloc((void**)(&reliable_curve_cuda), sizeof(float) * width * height * RELIABLE_CURVE_SAMPLE_NUM);
+	}
+    DepthToWeak << <grid_size_full, block_size_full >> > (helper_cuda, reliable_curve_cuda);
+	if (problem.export_reliable_curve) {
+		CUDA_SAFE_CALL(cudaDeviceSynchronize());
+		std::shared_ptr<float []> reliable_curve_host(new float[width * height * RELIABLE_CURVE_SAMPLE_NUM]);
+		cudaMemcpy(reliable_curve_host.get(), reliable_curve_cuda, sizeof(float) * width * height * RELIABLE_CURVE_SAMPLE_NUM, cudaMemcpyDeviceToHost);
+		ExportReliableCurve(reliable_curve_host);
+		cudaFree(reliable_curve_cuda);
+	}
+
     if (problem.params.geom_consistency || problem.params.use_APD) {
         ConfidenceCompute << < grid_size_full, block_size_full >> > (helper_cuda);
     }

@@ -42,6 +42,7 @@
 #define MAX_SEARCH_RADIUS 4096
 #define DEBUG_POINT_X 753
 #define DEBUG_POINT_Y 259
+#define RELIABLE_CURVE_SAMPLE_NUM 61
 
 
 using namespace boost::filesystem;
@@ -107,6 +108,7 @@ struct Problem {
     PatchMatchParams params;
     bool show_medium_result = false;
     bool export_anchor = false;
+    bool export_reliable_curve = false;
     int iteration;
     std::string img_ext;
 };

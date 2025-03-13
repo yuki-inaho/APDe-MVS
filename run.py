@@ -29,6 +29,7 @@ parser.add_argument('--ETH3D_test', action='store_true', default=False)
 parser.add_argument('--TaT_intermediate', action='store_true', default=False)
 parser.add_argument('--TaT_advanced', action='store_true', default=False)
 parser.add_argument('--export_anchor', action='store_true', default=False)
+parser.add_argument('--export_curve', action='store_true', default=False)
 args = parser.parse_args()
 #####################################################################################################
 
@@ -81,7 +82,7 @@ def worker(scan):
     call_APD_cmd = \
          '{} --dense_folder {} --gpu_index {} --dataset {} ' \
          '--only_fuse {} --no_fuse {}  --use_sa {} --memory_cache {} --flush {} ' \
-         '--export_anchor {} --export_color {} --use_impetus {} --weak_filter {}'.format(
+         '--export_anchor {} --export_curve {} --export_color {} --use_impetus {} --weak_filter {}'.format(
             args.APD_path, scan_dir, gpu_index, dataset,
             'true' if args.only_fuse else 'false',
             'true' if args.no_fuse else 'false',
@@ -89,6 +90,7 @@ def worker(scan):
             'true' if args.memory_cache else 'false',
             'true' if args.flush else 'false',
             'true' if args.export_anchor else 'false',
+            'true' if args.export_curve else 'false',
             "false" if args.no_color else "true",
             "false" if args.no_impetus else "true",
             "false" if args.no_weak_filter else "true"

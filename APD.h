@@ -120,6 +120,8 @@ private:
 
     void ExportNearestStrong();
 
+    void ExportReliableCurve(std::shared_ptr<float []> reliable_curve);
+
     int num_images;
     int width;
     int height;
