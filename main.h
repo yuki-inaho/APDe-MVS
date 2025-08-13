@@ -111,6 +111,7 @@ struct Problem {
     bool export_reliable_curve = false;
     int iteration;
     std::string img_ext;
+    int used_time;
 };
 
 #endif // !_MAIN_H_

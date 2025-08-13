@@ -117,6 +117,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--work_dir', type=str, default=None)
     parser.add_argument('--max_size', type=int, default=2560)
+    parser.add_argument('--model_type', type=str, default='vit_h')
     parser.add_argument('--scans', type=str, nargs='+', default=None)
     args = parser.parse_args()
     if args.scans is not None:
@@ -126,6 +127,8 @@ if __name__ == "__main__":
         scans = os.listdir(args.work_dir)
     print("total scans: ", len(scans))
 
-    sam_runner = SAMRunner(args.work_dir, scans, max_size=args.max_size)
+    sam_runner = SAMRunner(args.work_dir, scans, model_type=args.model_type, max_size=args.max_size)
     sam_runner.run()
+    max_mem = torch.cuda.max_memory_allocated() / 1024 / 1024
+    print("max memory: ", max_mem, "MB")
     print("All done")

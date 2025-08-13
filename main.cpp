@@ -96,6 +96,7 @@ void GenerateSampleList(const path &dense_folder, std::vector<Problem> &problems
             exit(-1);
         }
         problem.img_ext = ext;
+        problem.used_time = 0;
         problems.push_back(problem);
     }
 }
@@ -144,7 +145,7 @@ int ComputeRoundNum(const std::vector<Problem> &problems) {
     return round_num;
 }
 
-void ProcessProblem(const Problem &problem) {
+void ProcessProblem(Problem &problem) {
     std::cout << "Processing image: " << std::setw(8) << std::setfill('0') << problem.ref_image_id << "..."
               << std::endl;
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
@@ -153,7 +154,11 @@ void ProcessProblem(const Problem &problem) {
     APD.InuputInitialization();
     APD.CudaSpaceInitialization();
     APD.SetDataPassHelperInCuda();
+    std::chrono::steady_clock::time_point start_wo_io = std::chrono::steady_clock::now();
     APD.RunPatchMatch();
+    std::chrono::steady_clock::time_point end_wo_io = std::chrono::steady_clock::now();
+    printf("RunPatchMatch time: %d ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end_wo_io - start_wo_io).count());
+    problem.used_time += std::chrono::duration_cast<std::chrono::milliseconds>(end_wo_io - start_wo_io).count();
 
     int width = APD.GetWidth(), height = APD.GetHeight();
     cv::Mat depth = cv::Mat(height, width, CV_32FC1);
@@ -363,6 +368,13 @@ int main(int argc, char **argv) {
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Cost time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms"
               << std::endl;
+
+    int avg_used_time = 0;
+    for (auto &problem: problems) {
+        avg_used_time += problem.used_time;
+    }
+    avg_used_time /= problems.size();
+    std::cout << "Average used time: " << avg_used_time << " ms" << std::endl;
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // flush memory cache to disk
     ////////////////////////////////////////////////////////////////////////////////////////////////
