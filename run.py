@@ -22,7 +22,7 @@ parser.add_argument('--no_impetus', action='store_true', default=False)
 parser.add_argument('--no_weak_filter', action='store_true', default=False)
 parser.add_argument('--no_color', action='store_true', default=False)
 parser.add_argument('--flush', action='store_true', default=False)
-parser.add_argument('--review', action='store_true', default=False)
+parser.add_argument('--dry_run', action='store_true', default=False)
 parser.add_argument('--backup_code', action='store_true', default=False)
 parser.add_argument('--ETH3D_train', action='store_true', default=False)
 parser.add_argument('--ETH3D_test', action='store_true', default=False)
@@ -149,11 +149,9 @@ if __name__ == "__main__":
         print('sleep done')
 
     if args.ETH3D_train:
-        scans = ['courtyard', 'delivery_area', 'electro', 'facade', 'kicker', 'meadow', 'office', 'pipes', 'playground',
-                 'relief', 'relief_2', 'terrace', 'terrains']
+        scans = ['courtyard', 'delivery_area', 'electro', 'facade', 'kicker', 'meadow', 'office', 'pipes', 'playground', 'relief', 'relief_2', 'terrace', 'terrains']
     elif args.ETH3D_test:
-        scans = ['botanical_garden', 'boulders', 'bridge', 'door', 'exhibition_hall', 'lecture_room', 'living_room',
-                 'lounge', 'observatory', 'old_computer', 'statue', 'terrace_2']
+        scans = ['botanical_garden', 'boulders', 'bridge', 'door', 'exhibition_hall', 'lecture_room', 'living_room', 'lounge', 'observatory', 'old_computer', 'statue', 'terrace_2']
     elif args.TaT_intermediate:
         scans = ['Family', 'Francis', 'Horse', 'Lighthouse', 'M60', 'Panther', 'Playground']
     elif args.TaT_advanced:
