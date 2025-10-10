@@ -1,5 +1,6 @@
 # APDe-MVS
-## About
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) 
+## Introduction
 
 APDe-MVS is the enhanced version of [APD-MVS](https://github.com/whoiszzj/APD-MVS.git). Based on APD-MVS, we introduce some new contributions to make the reconstruction performance better.
 
@@ -169,10 +170,6 @@ Finally, a brief introduction to the script `tools/run_SAM.py`:
 | scans      | List of scene names to process (list of strings). If empty, runs all scenes under `<data_dir>`. |
 
 If you consider SAM a bit out of date, you can replace it with a model like SAM2 to improve quality, speed, and memory usage. Note that you will need small script adjustments while keeping the mask format consistent.
-
-
-
-
 
 
 ## Acknowledgements
