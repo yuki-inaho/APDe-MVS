@@ -1,5 +1,7 @@
 # APDe-MVS
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) 
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Paper](https://img.shields.io/badge/Paper-APDeMVS-red.svg)](https://www.sciencedirect.com/science/article/pii/S0031320325012567)
+
 ## Introduction
 
 APDe-MVS is the enhanced version of [APD-MVS](https://github.com/whoiszzj/APD-MVS.git). Based on APD-MVS, we introduce some new contributions to make the reconstruction performance better.
@@ -12,8 +14,18 @@ APDe-MVS is the enhanced version of [APD-MVS](https://github.com/whoiszzj/APD-MV
 Moreover, we have appropriately optimized the code to make it more feature-rich and user-friendly. If you find this project useful for your research, please cite:  
 
 ```
-#TODO
+@article{ZENG2025112593,
+    title = {Matching Ambiguity-Resilient Multi-View Stereo via Adaptive Patch Deformation},
+    journal = {Pattern Recognition},
+    pages = {112593},
+    year = {2025},
+    issn = {0031-3203},
+    doi = {https://doi.org/10.1016/j.patcog.2025.112593},
+    url = {https://www.sciencedirect.com/science/article/pii/S0031320325012567},
+    author = {Zhaojie Zeng and Yuesong Wang and Tao Guan}
+}
 ```
+
 ## Dependencies
 
 The code has been tested on Ubuntu 24.04, and you can modify the CMakeList.txt to compile on Windows.
