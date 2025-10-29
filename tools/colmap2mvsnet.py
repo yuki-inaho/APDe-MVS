@@ -15,6 +15,7 @@ import os
 import argparse
 import shutil
 import cv2
+import tqdm
 
 # ============================ read_model.py ============================#
 CameraModel = collections.namedtuple(
@@ -412,7 +413,7 @@ def processing_single_scene(args):
 
     # depth range and interval
     depth_ranges = {}
-    for i in range(num_images):
+    for i in tqdm.tqdm(range(num_images), desc="Computing depth ranges", leave=False):
         zs = []
         for p3d_id in images[i + 1].point3D_ids:
             if p3d_id == -1:
@@ -449,31 +450,48 @@ def processing_single_scene(args):
     print('depth_ranges[1]\n', depth_ranges[1], end='\n\n')
 
     # view selection
-    score = np.zeros((len(images), len(images)))
-    queue = []
-    for i in range(len(images)):
-        for j in range(i + 1, len(images)):
-            queue.append((i, j))
+    if args.sequential:
+        view_sel = []
+        max_neighbors = min(len(images) - 1, args.sequential_k * 2)
+        for i in range(len(images)):
+            neighbors = []
+            for offset in range(1, args.sequential_k + 1):
+                for direction in (-1, 1):
+                    j = i + direction * offset
+                    if 0 <= j < len(images):
+                        score = args.sequential_k + 1 - offset
+                        neighbors.append((j, score))
+            neighbors.sort(key=lambda item: (-item[1], abs(item[0] - i)))
+            view_sel.append(neighbors[:max_neighbors])
+        print(f'sequential view selection enabled (k={args.sequential_k})')
+        if view_sel and view_sel[0]:
+            print('view_sel[0]\n', view_sel[0], end='\n\n')
+    else:
+        score = np.zeros((len(images), len(images)))
+        queue = []
+        for i in range(len(images)):
+            for j in range(i + 1, len(images)):
+                queue.append((i, j))
 
-    p = mp.Pool(processes=mp.cpu_count())
-    func = partial(calc_score, images=images, points3d=points3d, args=args, extrinsic=extrinsic)
-    result = p.map(func, queue)
-    for i, j, s in result:
-        score[i, j] = s
-        score[j, i] = s
-    view_sel = []
-    num_view = min(20, len(images) - 1)
-    for i in range(len(images)):
-        sorted_score = np.argsort(score[i])[::-1]
-        view_sel.append([(k, score[i, k]) for k in sorted_score[:num_view]])
-    print('view_sel[0]\n', view_sel[0], end='\n\n')
+        with mp.Pool(processes=mp.cpu_count()) as pool:
+            func = partial(calc_score, images=images, points3d=points3d, args=args, extrinsic=extrinsic)
+            result = pool.map(func, queue)
+        for i, j, s in result:
+            score[i, j] = s
+            score[j, i] = s
+        view_sel = []
+        num_view = min(20, len(images) - 1)
+        for i in tqdm.tqdm(range(len(images)), desc="Selecting views", leave=False):
+            sorted_score = np.argsort(score[i])[::-1]
+            view_sel.append([(k, score[i, k]) for k in sorted_score[:num_view]])
+        print('view_sel[0]\n', view_sel[0], end='\n\n')
 
     # write
     try:
         os.makedirs(cam_dir)
     except os.error:
         print(cam_dir + ' already exist.')
-    for i in range(num_images):
+    for i in tqdm.tqdm(range(num_images), desc="Exporting cams", leave=False):
         with open(os.path.join(cam_dir, '%08d_cam.txt' % i), 'w') as f:
             f.write('extrinsic\n')
             for j in range(4):
@@ -497,7 +515,7 @@ def processing_single_scene(args):
 
     max_width = 0
     max_height = 0
-    for i in range(num_images):
+    for i in tqdm.tqdm(range(num_images), desc="Computing max image size", leave=False):
         img_path = os.path.join(image_dir, images[i + 1].name)
         img = cv2.imread(img_path)
         if max_height < img.shape[0]:
@@ -506,7 +524,7 @@ def processing_single_scene(args):
             max_width = img.shape[1]
 
     # convert to jpg
-    for i in range(num_images):
+    for i in tqdm.tqdm(range(num_images), desc="Converting images", leave=False):
         img_path = os.path.join(image_dir, images[i + 1].name)
         img = cv2.imread(img_path)
         pad_width = max_width - img.shape[1]
@@ -543,6 +561,10 @@ if __name__ == '__main__':
     parser.add_argument('--sigma1', type=float, default=1)
     parser.add_argument('--sigma2', type=float, default=10)
     parser.add_argument('--model_ext', type=str, default=".txt", choices=[".txt", ".bin"], help='sparse model ext')
+    parser.add_argument('--sequential', action=argparse.BooleanOptionalAction, default=True,
+                        help='Enable sequential neighbour selection (default: enabled).')
+    parser.add_argument('--sequential_k', type=int, default=5,
+                        help='Number of forward/backward neighbours to use when sequential mode is enabled.')
 
     args = parser.parse_args()
 

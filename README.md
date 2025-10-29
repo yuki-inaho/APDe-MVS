@@ -40,6 +40,56 @@ If you want to use segmentation models such as SAM as plugins for reconstruction
 pip install git+https://github.com/facebookresearch/segment-anything.git
 ```
 
+### Quick Start (uv + just)
+
+We provide a `pyproject.toml` and `justfile` to streamline environment setup:
+
+1. Run the all-in-one installer (creates the virtualenv, installs CUDA 11.8 PyTorch wheels, and pulls Segment Anything).
+   ```sh
+   just install
+   ```
+   (Alternatively, you can invoke `just setup`, `just install-cu118`, and `just install-sam` individually.)
+2. Configure and build the C++ executable.
+   ```sh
+   just configure
+   just build
+   ```
+3. Run a scan (provide a dataset root and optional scene names).
+   ```sh
+   just run-scan data_dir=/path/to/dataset scan_name
+   ```
+
+Use `prepare_scene.py` to normalise datasets that store images under a custom
+folder name:
+
+```sh
+python prepare_scene.py --data-dir /path/to/colmap/scene --ensure-symlink
+```
+
+For COLMAP outputs, you can also trigger conversion and reconstruction in one go:
+
+```sh
+just reconstruct /path/to/colmap/scene --run-args "--no_sam --memory_cache"
+```
+Use `--convert-args` to pass extra parameters to the conversion step (e.g.,
+`--convert-args "--sequential-k 8"` or `--convert-args "--no-sequential"`).
+
+This writes the converted scan and reconstruction artifacts under `results/<scene_name>/`.
+
+Individual steps are also available:
+
+```sh
+# レイアウト正規化のみ
+just prep-scene /path/to/colmap/scene
+
+# MVSNet 形式への変換のみ（出力先を指定）
+just convert-colmap /path/to/colmap/scene results/scene_out
+```
+追加オプションは `--script-args` 経由で渡せます（例:
+`just convert-colmap ... --script-args "--sequential-k 8"`）。
+順次撮影のままなら既定で時間近傍を利用しますが、
+`--script-args "--no-sequential"` を付ければ従来の COLMAP スコアリングに切り替わります。
+
 
 ## Usage
 ### Compile APDe-MVS
@@ -124,6 +174,10 @@ Compared to APD-MVS, we now provide a Python runner script [run.py](https://gith
 | TaT_advanced     | Quickly select all 6 scenes in Tanks and Temples Advanced set. Overrides `scans`. |
 | export_anchor    | Export anchor information; use `anchor_vis.py` to visualize intermediates. |
 | export_curve     | Export Reliable Curve. Visualization code is not included; feel free to use GPT/Cursor to help visualize. |
+| image_dir_name   | Candidate image directory names (default `images` and `undist/images`). |
+| image_suffixes   | Allowed image suffixes; defaults to `.jpg`, `.jpeg`, `.png`. |
+| no_image_symlink | Disable automatic creation of an `images/` symlink when the dataset uses another folder. |
+| review           | Print the APDe command without executing it. |
 
 Assume your server has many CPU threads but low turbo frequency, a large amount of RAM with slow IO, and 4× A100 GPUs.
 

@@ -9,3 +9,4 @@ data
 run_*.sh
 checkpoints
 *__pycache__/
+results

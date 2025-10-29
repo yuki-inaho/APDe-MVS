@@ -2,6 +2,8 @@ import os
 import multiprocessing as mp
 import argparse
 import glob
+
+from scripts.dataset_loader import DatasetLayoutConfig, SceneDatasetLoader
 from tools.run_SAM import SAMRunner
 
 #####################################################################################################
@@ -30,6 +32,15 @@ parser.add_argument('--TaT_intermediate', action='store_true', default=False)
 parser.add_argument('--TaT_advanced', action='store_true', default=False)
 parser.add_argument('--export_anchor', action='store_true', default=False)
 parser.add_argument('--export_curve', action='store_true', default=False)
+parser.add_argument('--image_dir_name', type=str, nargs='+',
+                    default=['images', 'undist/images'],
+                    help='画像ディレクトリ名の候補。複数指定可。')
+parser.add_argument('--image_suffixes', type=str, nargs='+',
+                    default=['.jpg', '.jpeg', '.png'],
+                    help='利用する画像ファイル拡張子。ドット有無は不要。')
+parser.add_argument('--no_image_symlink', action='store_true', default=False,
+                    help='候補から images/ へのシンボリックリンクを作成しない。')
+parser.add_argument('--review', action='store_true', default=False)
 args = parser.parse_args()
 #####################################################################################################
 
@@ -44,6 +55,17 @@ def worker(scan):
     scan_dir = os.path.join(args.data_dir, scan)
     if not os.path.isdir(scan_dir):
         print('{} is not a dir'.format(scan_dir))
+        return
+    layout_config = DatasetLayoutConfig(
+        image_dir_candidates=args.image_dir_name,
+        image_suffixes=args.image_suffixes,
+        create_symlink=not args.no_image_symlink
+    )
+    loader = SceneDatasetLoader(scan_dir, layout_config)
+    try:
+        loader.ensure_standard_image_dir()
+    except (FileNotFoundError, FileExistsError) as exc:
+        print('[{}] 画像ディレクトリを準備できません: {}'.format(scan, exc))
         return
 
     ########################################################
@@ -164,12 +186,30 @@ if __name__ == "__main__":
             scans.sort()
 
     scans = [{'scan': scan, 'img': 0} for scan in scans]
+    filtered_scans = []
     for scan in scans:
         scan_dir = os.path.join(args.data_dir, scan['scan'])
         if not os.path.isdir(scan_dir):
             print('{} is not a dir'.format(scan_dir))
             continue
-        scan['img'] = len(os.listdir(os.path.join(scan_dir, 'images')))
+        layout_config = DatasetLayoutConfig(
+            image_dir_candidates=args.image_dir_name,
+            image_suffixes=args.image_suffixes,
+            create_symlink=not args.no_image_symlink
+        )
+        loader = SceneDatasetLoader(scan_dir, layout_config)
+        try:
+            if not args.no_image_symlink:
+                loader.ensure_standard_image_dir()
+            scan['img'] = loader.count_images()
+        except (FileNotFoundError, FileExistsError) as exc:
+            print('{} をスキップ: {}'.format(scan_dir, exc))
+            continue
+        filtered_scans.append(scan)
+    scans = filtered_scans
+    if len(scans) == 0:
+        print('No valid scans found.')
+        exit(0)
     # sort by img number
     scans.sort(key=lambda x: -x['img'])
     scans = [scan['scan'] for scan in scans]

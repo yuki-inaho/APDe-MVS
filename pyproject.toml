@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "apde-mvs"
+version = "0.1.0"
+description = "APDe-MVS helper scripts and tooling"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.23",
+    "opencv-python>=4.6.0",
+    "matplotlib>=3.7",
+    "tqdm>=4.65",
+]
+
+[project.optional-dependencies]
+sam = [
+    "segment-anything @ git+https://github.com/facebookresearch/segment-anything.git",
+]
+
+[tool.uv]
+package = false
